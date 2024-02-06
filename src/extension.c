@@ -3,20 +3,16 @@
 #include "config.h"
 #endif
 
-#include <stdio.h>
 #include <string.h>
 
 #include "Zend/zend_API.h"
 #include "Zend/zend_constants.h"
-#include "Zend/zend_exceptions.h"
 #include "Zend/zend_ini.h"
 #include "Zend/zend_modules.h"
 #include "Zend/zend_operators.h"
 #include "main/php.h"
 #include "main/php_ini.h"
-#include "main/SAPI.h"
 #include "ext/standard/info.h"
-#include "ext/standard/php_string.h"
 
 #include "php_vyrtue.h"
 
@@ -24,7 +20,7 @@ ZEND_DECLARE_MODULE_GLOBALS(vyrtue);
 
 static void (*original_ast_process)(zend_ast *ast) = NULL;
 
-// void vyrtue_ast_process_file(zend_ast *ast);
+void vyrtue_ast_process_file(zend_ast *ast);
 
 PHP_INI_BEGIN()
 PHP_INI_END()
@@ -35,7 +31,7 @@ VYRTUE_PUBLIC zend_never_inline void vyrtue_ast_process(zend_ast *ast)
         original_ast_process(ast);
     }
 
-    // vyrtue_ast_process_file(ast);
+    vyrtue_ast_process_file(ast);
 }
 
 static PHP_RINIT_FUNCTION(vyrtue)
@@ -89,7 +85,11 @@ static PHP_GINIT_FUNCTION(vyrtue)
     memset(vyrtue_globals, 0, sizeof(zend_vyrtue_globals));
 }
 
-const zend_function_entry vyrtue_functions[] = {PHP_FE_END};
+const zend_function_entry vyrtue_functions[] = {
+#ifdef VYRTUE_DEBUG
+#endif
+    PHP_FE_END,
+};
 
 static const zend_module_dep vyrtue_deps[] = {
     {"ast",     NULL, NULL, MODULE_DEP_OPTIONAL},
