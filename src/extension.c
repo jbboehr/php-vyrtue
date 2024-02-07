@@ -69,6 +69,11 @@ static PHP_MINIT_FUNCTION(vyrtue)
 
     // Register constants
     REGISTER_STRING_CONSTANT("VyrtueExt\\VERSION", (char *) PHP_VYRTUE_VERSION, flags);
+#ifdef VYRTUE_DEBUG
+    REGISTER_BOOL_CONSTANT("VyrtueExt\\DEBUG", true, flags);
+#else
+    REGISTER_BOOL_CONSTANT("VyrtueExt\\DEBUG", false, flags);
+#endif
 
     if (NULL == original_ast_process) {
         original_ast_process = zend_ast_process;

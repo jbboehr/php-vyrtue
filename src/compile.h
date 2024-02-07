@@ -52,3 +52,8 @@ static void str_dtor(zval *zv)
 {
     zend_string_release_ex(Z_STR_P(zv), 0);
 }
+
+static zend_string *zend_concat_names(char *name1, size_t name1_len, char *name2, size_t name2_len)
+{
+    return zend_string_concat3(name1, name1_len, "\\", 1, name2, name2_len);
+}
