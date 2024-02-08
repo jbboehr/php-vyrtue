@@ -61,7 +61,7 @@ BreakConstructorInitializersBeforeComma: false
 BreakConstructorInitializers: BeforeColon
 BreakAfterJavaFieldAnnotations: false
 BreakStringLiterals: true
-ColumnLimit:     120
+ColumnLimit:     160
 CommentPragmas:  '^ IWYU pragma:'
 QualifierAlignment: Leave
 CompactNamespaces: false
@@ -112,8 +112,8 @@ IndentWrappedFunctionNames: false
 InsertTrailingCommas: Wrapped
 KeepEmptyLinesAtTheStartOfBlocks: true
 LambdaBodyIndentation: Signature
-MacroBlockBegin: "^PHP_INI_BEGIN|ZEND_PARSE_PARAMETERS_START|ZEND_BEGIN_ARG_INFO_EX$"
-MacroBlockEnd:   '^PHP_INI_END|ZEND_PARSE_PARAMETERS_START|ZEND_END_ARG_INFO$'
+MacroBlockBegin: "^PHP_INI_BEGIN|ZEND_PARSE_PARAMETERS_START|ZEND_BEGIN_ARG_INFO_EX|ZEND_BEGIN_MODULE_GLOBALS$"
+MacroBlockEnd:   '^PHP_INI_END|ZEND_PARSE_PARAMETERS_START|ZEND_END_ARG_INFO|ZEND_END_MODULE_GLOBALS$'
 MaxEmptyLinesToKeep: 1
 NamespaceIndentation: None
 PenaltyBreakAssignment: 2

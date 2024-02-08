@@ -20,6 +20,8 @@
 #ifndef PHP_VYRTUE_H
 #define PHP_VYRTUE_H
 
+#include <stdbool.h>
+
 #include "main/php.h"
 
 #define PHP_VYRTUE_NAME "vyrtue"
@@ -56,7 +58,16 @@ ZEND_TSRMLS_CACHE_EXTERN();
 #endif
 
 ZEND_BEGIN_MODULE_GLOBALS(vyrtue)
+    HashTable kind_hooks;
+    HashTable function_hooks;
 ZEND_END_MODULE_GLOBALS(vyrtue)
+
+struct vyrtue_preprocess_context;
+typedef zend_ast *(*vyrtue_ast_callback)(zend_ast *ast, struct vyrtue_preprocess_context *ctx);
+
+VYRTUE_PUBLIC void vyrtue_register_kind_visitor(enum _zend_ast_kind kind, vyrtue_ast_callback enter, vyrtue_ast_callback leave);
+
+VYRTUE_PUBLIC void vyrtue_register_function_visitor(zend_string *function_name, vyrtue_ast_callback enter, vyrtue_ast_callback leave);
 
 ZEND_EXTERN_MODULE_GLOBALS(vyrtue);
 

@@ -1,0 +1,20 @@
+--TEST--
+replacement 04
+--EXTENSIONS--
+vyrtue
+--SKIPIF--
+<?php if (!VyrtueExt\DEBUG) die("Skipped: vyrtue not debug build"); ?>
+--FILE--
+<?php
+namespace FooBar;
+use function VyrtueExt\Debug\sample_replacement_function;
+class BarBat {
+    public function sayHello() {
+        return (function () {
+            var_dump(sample_replacement_function());
+        })();
+    }
+}
+(new BarBat())->sayHello();
+--EXPECT--
+int(12345)

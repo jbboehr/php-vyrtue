@@ -38,11 +38,16 @@ if test "$PHP_VYRTUE" != "no"; then
 
     if test "$PHP_VYRTUE_DEBUG" == "yes"; then
         AC_DEFINE([VYRTUE_DEBUG], [1], [Enable vyrtue debug support])
+
+        PHP_VYRTUE_ADD_SOURCES([
+            src/debug.c
+        ])
     fi
 
     PHP_VYRTUE_ADD_SOURCES([
         src/extension.c
         src/preprocess.c
+        src/visitor.c
     ])
 
     PHP_ADD_BUILD_DIR(src)

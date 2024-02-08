@@ -33,6 +33,7 @@
 #include "ext/standard/info.h"
 
 #include "php_vyrtue.h"
+#include "private.h"
 
 ZEND_DECLARE_MODULE_GLOBALS(vyrtue);
 
@@ -80,6 +81,11 @@ static PHP_MINIT_FUNCTION(vyrtue)
         zend_ast_process = vyrtue_ast_process;
     }
 
+    PHP_MINIT(vyrtue_preprocess)(INIT_FUNC_ARGS_PASSTHRU);
+#ifdef VYRTUE_DEBUG
+    PHP_MINIT(vyrtue_debug)(INIT_FUNC_ARGS_PASSTHRU);
+#endif
+
     return SUCCESS;
 }
 
@@ -106,6 +112,14 @@ static PHP_GINIT_FUNCTION(vyrtue)
     ZEND_TSRMLS_CACHE_UPDATE();
 #endif
     memset(vyrtue_globals, 0, sizeof(zend_vyrtue_globals));
+    zend_hash_init(&vyrtue_globals->function_hooks, 16, NULL, NULL, 1);
+    zend_hash_init(&vyrtue_globals->kind_hooks, 16, NULL, NULL, 1);
+}
+
+static PHP_GSHUTDOWN_FUNCTION(vyrtue)
+{
+    zend_hash_destroy(&vyrtue_globals->function_hooks);
+    zend_hash_destroy(&vyrtue_globals->kind_hooks);
 }
 
 const zend_function_entry vyrtue_functions[] = {
@@ -134,7 +148,7 @@ zend_module_entry vyrtue_module_entry = {
     PHP_VYRTUE_VERSION,         /* Version */
     PHP_MODULE_GLOBALS(vyrtue), /* Globals */
     PHP_GINIT(vyrtue),          /* GINIT */
-    NULL,
+    PHP_GSHUTDOWN(vyrtue),      /* GSHUTDOWN */
     NULL,
     STANDARD_MODULE_PROPERTIES_EX,
 };
