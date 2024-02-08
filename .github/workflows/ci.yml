@@ -51,6 +51,9 @@ jobs:
                     - "8.1"
                     - "8.2"
                     - "8.3"
+                debug:
+                    - ""
+                    - "debug"
         steps:
             - uses: actions/checkout@v4
 
@@ -71,6 +74,10 @@ jobs:
             - run: phpize
 
             - run: ./configure CFLAGS="-fprofile-arcs -ftest-coverage ${CFLAGS}" LDFLAGS="--coverage ${LDFLAGS}"
+              if: matrix.debug == 'debug'
+
+            - run: ./configure --enable-vyrtue-debug CFLAGS="-fprofile-arcs -ftest-coverage ${CFLAGS}" LDFLAGS="--coverage ${LDFLAGS}"
+              if: matrix.debug != 'debug'
 
             - run: lcov --directory . --zerocounters
 
