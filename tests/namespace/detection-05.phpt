@@ -6,7 +6,7 @@ vyrtue
 PHP_VYRTUE_DEBUG_DUMP_NAMESPACE=1
 PHP_VYRTUE_DEBUG_DUMP_USE=1
 --SKIPIF--
-<?php if (!VyrtueExt\DEBUG) die("Skipped: vyrtue not debug build"); ?>
+<?php if (!VyrtueExt\DEBUG) die("skip: vyrtue not debug build"); ?>
 --FILE--
 <?php
 use some\namespace\{ClassA, ClassB, ClassC as C};

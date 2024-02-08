@@ -3,7 +3,7 @@ replacement 04
 --EXTENSIONS--
 vyrtue
 --SKIPIF--
-<?php if (!VyrtueExt\DEBUG) die("Skipped: vyrtue not debug build"); ?>
+<?php if (!VyrtueExt\DEBUG) die("skip: vyrtue not debug build"); ?>
 --FILE--
 <?php
 namespace FooBar;

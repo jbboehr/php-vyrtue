@@ -3,10 +3,10 @@
 
 # args
 PHP_ARG_ENABLE(vyrtue,     whether to enable vyrtue support,
-[  --enable-vyrtue         Enable vyrtue support])
+[AS_HELP_STRING([--enable-vyrtue], [Enable vyrtue support])])
 
 PHP_ARG_ENABLE(vyrtue-debug, whether to enable vyrtue debug support,
-[  --enable-vyrtue-debug   Enable vyrtue debug support])
+[AS_HELP_STRING([--enable-vyrtue-debug], [Enable vyrtue debug support])], [no], [no])
 
 AC_DEFUN([PHP_VYRTUE_ADD_SOURCES], [
   PHP_VYRTUE_SOURCES="$PHP_VYRTUE_SOURCES $1"

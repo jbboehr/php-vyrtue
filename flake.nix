@@ -71,12 +71,15 @@
               enabled ++ [all.ast all.opcache];
           };
 
-        makePackage = php': let
-          php = makePhp php';
+        makePackage = {
+          php,
+          debugSupport ? false,
+        } @ args: let
+          php = makePhp args.php;
         in
           pkgs.callPackage ./derivation.nix {
             inherit (php) buildPecl;
-            inherit src php;
+            inherit src php debugSupport;
           };
 
         makeCheck = package:
@@ -100,9 +103,21 @@
         };
       in rec {
         packages = rec {
-          php81 = makePackage pkgs.php81;
-          php82 = makePackage pkgs.php82;
-          php83 = makePackage pkgs.php83;
+          php81 = makePackage {php = pkgs.php81;};
+          php82 = makePackage {php = pkgs.php82;};
+          php83 = makePackage {php = pkgs.php83;};
+          php81-debug = makePackage {
+            php = pkgs.php81;
+            debugSupport = true;
+          };
+          php82-debug = makePackage {
+            php = pkgs.php82;
+            debugSupport = true;
+          };
+          php83-debug = makePackage {
+            php = pkgs.php83;
+            debugSupport = true;
+          };
           default = php81;
         };
 

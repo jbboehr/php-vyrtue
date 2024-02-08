@@ -5,6 +5,7 @@
   autoreconfHook,
   buildPecl,
   src,
+  debugSupport ? false,
 }:
 buildPecl rec {
   pname = "vyrtue";
@@ -14,6 +15,10 @@ buildPecl rec {
   inherit src;
 
   passthru.php = php;
+
+  configureFlags =
+    []
+    ++ lib.optional debugSupport "--enable-vyrtue-debug";
 
   makeFlags = ["phpincludedir=$(out)/include/php"];
 
