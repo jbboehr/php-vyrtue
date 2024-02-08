@@ -550,6 +550,7 @@ VYRTUE_PUBLIC void vyrtue_ast_process_file(zend_ast *ast)
 
     vyrtue_end_namespace(&ctx);
     zend_hash_destroy(ctx.seen_symbols);
+    efree(ctx.seen_symbols);
 }
 
 VYRTUE_LOCAL PHP_MINIT_FUNCTION(vyrtue_preprocess)
