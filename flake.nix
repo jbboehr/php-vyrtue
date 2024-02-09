@@ -149,8 +149,11 @@
         checks = {
           inherit pre-commit-check;
           php81 = makeCheck packages.php81;
+          php81-debug = makeCheck packages.php81-debug;
           php82 = makeCheck packages.php82;
+          php82-debug = makeCheck packages.php82-debug;
           php83 = makeCheck packages.php83;
+          php83-debug = makeCheck packages.php83-debug;
         };
 
         formatter = pkgs.alejandra;

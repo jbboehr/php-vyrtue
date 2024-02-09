@@ -42,164 +42,30 @@ static void dump_ht(HashTable *ht)
     php_var_dump(&tmp, 1);
 }
 
-/**
- * @see zend_get_import_ht
- * @license Zend-2.0
- */
-VYRTUE_ATTR_NONNULL_ALL
-VYRTUE_ATTR_WARN_UNUSED_RESULT
-static HashTable *vyrtue_get_import_ht(uint32_t type, struct vyrtue_preprocess_context *ctx)
-{
-    switch (type) {
-        case ZEND_SYMBOL_CLASS:
-            if (!ctx->imports) {
-                ctx->imports = emalloc(sizeof(HashTable));
-                zend_hash_init(ctx->imports, 8, NULL, str_dtor, 0);
-            }
-            return ctx->imports;
-        case ZEND_SYMBOL_FUNCTION:
-            if (!ctx->imports_function) {
-                ctx->imports_function = emalloc(sizeof(HashTable));
-                zend_hash_init(ctx->imports_function, 8, NULL, str_dtor, 0);
-            }
-            return ctx->imports_function;
-        case ZEND_SYMBOL_CONST:
-            if (!ctx->imports_const) {
-                ctx->imports_const = emalloc(sizeof(HashTable));
-                zend_hash_init(ctx->imports_const, 8, NULL, str_dtor, 0);
-            }
-            return ctx->imports_const;
-        default:
-            return NULL;
-    }
-}
-
-/**
- * @see zend_reset_import_tables
- * @license Zend-2.0
- */
-VYRTUE_ATTR_NONNULL_ALL
-static void vyrtue_reset_import_tables(struct vyrtue_preprocess_context *ctx)
-{
-    if (ctx->imports) {
-        zend_hash_destroy(ctx->imports);
-        efree(ctx->imports);
-        ctx->imports = NULL;
-    }
-
-    if (ctx->imports_function) {
-        zend_hash_destroy(ctx->imports_function);
-        efree(ctx->imports_function);
-        ctx->imports_function = NULL;
-    }
-
-    if (ctx->imports_const) {
-        zend_hash_destroy(ctx->imports_const);
-        efree(ctx->imports_const);
-        ctx->imports_const = NULL;
-    }
-}
-
-VYRTUE_ATTR_NONNULL_ALL
-static void vyrtue_end_namespace(struct vyrtue_preprocess_context *ctx)
-{
-    ctx->in_namespace = false;
-    vyrtue_reset_import_tables(ctx);
-    if (ctx->current_namespace) {
 #ifdef VYRTUE_DEBUG
-        if (UNEXPECTED(NULL != getenv("PHP_VYRTUE_DEBUG_DUMP_NAMESPACE"))) {
-            fprintf(stderr, "VYRTUE_NAMESPACE: LEFT: %.*s\n", (int) ctx->current_namespace->len, ctx->current_namespace->val);
-        }
+static inline void vyrtue_ast_process_debug_dump_ast(zend_ast *ast)
+{
+    zend_string *str = zend_ast_export("", ast, "");
+    fprintf(stderr, "%.*s", (int) str->len, str->val);
+    fflush(stderr);
+    zend_string_release(str);
+}
+
+static void vyrtue_ast_process_debug_replacement(zend_ast *before, zend_ast *after)
+{
+    if (UNEXPECTED(NULL != getenv("PHP_VYRTUE_DEBUG_DUMP_REPLACEMENT"))) {
+        fprintf(stderr, "BEFORE: ");
+        fflush(stderr);
+        vyrtue_ast_process_debug_dump_ast(before);
+        fprintf(stderr, "AFTER: ");
+        fflush(stderr);
+        vyrtue_ast_process_debug_dump_ast(after);
+    }
+}
+#else
+#define vyrtue_ast_process_debug_dump_ast(ast)
+#define vyrtue_ast_process_debug_replacement(before, after)
 #endif
-        ctx->current_namespace = NULL;
-    }
-}
-
-/**
- * @see zend_prefix_with_ns
- */
-VYRTUE_ATTR_NONNULL_ALL
-VYRTUE_ATTR_WARN_UNUSED_RESULT
-static zend_string *vyrtue_prefix_with_ns(zend_string *name, struct vyrtue_preprocess_context *ctx)
-{
-    if (ctx->current_namespace) {
-        zend_string *ns = ctx->current_namespace;
-        return zend_concat_names(ZSTR_VAL(ns), ZSTR_LEN(ns), ZSTR_VAL(name), ZSTR_LEN(name));
-    } else {
-        return zend_string_copy(name);
-    }
-}
-
-/**
- * @see zend_resolve_non_class_name
- */
-VYRTUE_ATTR_NONNULL(1, 3, 6)
-VYRTUE_ATTR_WARN_UNUSED_RESULT
-static zend_string *vyrtue_resolve_non_class_name(
-    zend_string *name, uint32_t type, bool *is_fully_qualified, bool case_sensitive, HashTable *current_import_sub, struct vyrtue_preprocess_context *ctx
-)
-{
-    char *compound;
-    *is_fully_qualified = 0;
-
-    if (ZSTR_VAL(name)[0] == '\\') {
-        /* Remove \ prefix (only relevant if this is a string rather than a label) */
-        *is_fully_qualified = 1;
-        return zend_string_init(ZSTR_VAL(name) + 1, ZSTR_LEN(name) - 1, 0);
-    }
-
-    if (type == ZEND_NAME_FQ) {
-        *is_fully_qualified = 1;
-        return zend_string_copy(name);
-    }
-
-    if (type == ZEND_NAME_RELATIVE) {
-        *is_fully_qualified = 1;
-        return vyrtue_prefix_with_ns(name, ctx);
-    }
-
-    if (current_import_sub) {
-        /* If an unqualified name is a function/const alias, replace it. */
-        zend_string *import_name;
-        if (case_sensitive) {
-            import_name = zend_hash_find_ptr(current_import_sub, name);
-        } else {
-            import_name = zend_hash_find_ptr_lc(current_import_sub, name);
-        }
-
-        if (import_name) {
-            *is_fully_qualified = 1;
-            return zend_string_copy(import_name);
-        }
-    }
-
-    compound = memchr(ZSTR_VAL(name), '\\', ZSTR_LEN(name));
-    if (compound) {
-        *is_fully_qualified = 1;
-    }
-
-    if (compound && ctx->imports) {
-        /* If the first part of a qualified name is an alias, substitute it. */
-        size_t len = compound - ZSTR_VAL(name);
-        zend_string *import_name = zend_hash_str_find_ptr_lc(ctx->imports, ZSTR_VAL(name), len);
-
-        if (import_name) {
-            return zend_concat_names(ZSTR_VAL(import_name), ZSTR_LEN(import_name), ZSTR_VAL(name) + len + 1, ZSTR_LEN(name) - len - 1);
-        }
-    }
-
-    return vyrtue_prefix_with_ns(name, ctx);
-}
-
-/**
- * @see zend_resolve_function_name
- */
-VYRTUE_ATTR_NONNULL_ALL
-VYRTUE_ATTR_WARN_UNUSED_RESULT
-static zend_string *vyrtue_resolve_function_name(zend_string *name, uint32_t type, bool *is_fully_qualified, struct vyrtue_preprocess_context *ctx)
-{
-    return vyrtue_resolve_non_class_name(name, type, is_fully_qualified, 0, ctx->imports_function, ctx);
-}
 
 /**
  * @see zend_compile_namespace
@@ -341,9 +207,11 @@ static zend_ast *vyrtue_ast_process_group_use_enter(zend_ast *ast, struct vyrtue
         ZVAL_STR(name_zval, compound_ns);
         inline_use = zend_ast_create_list(1, ZEND_AST_USE, use);
         inline_use->attr = ast->attr ? ast->attr : use->attr;
-        zend_ast *replace_child = vyrtue_ast_process_use_enter(inline_use, ctx);
-        if (replace_child != NULL) {
+        zend_ast *replace = vyrtue_ast_process_use_enter(inline_use, ctx);
+
+        if (UNEXPECTED(replace != NULL)) {
             zend_throw_exception(zend_ce_parse_error, "vyrtue visitor attempted to replace invalid AST node", 0);
+            return NULL;
         }
     }
 
@@ -461,7 +329,8 @@ static void vyrtue_ast_walk_list(zend_ast *ast, struct vyrtue_preprocess_context
         zend_ast *replace_child = vyrtue_ast_walk(child, ctx);
 
         if (UNEXPECTED(replace_child != NULL && replace_child != child)) {
-            zend_ast_destroy(list->child[i]);
+            vyrtue_ast_process_debug_replacement(list->child[i], replace_child);
+            zend_ast_destroy(child);
             list->child[i] = replace_child;
         }
     }
@@ -480,10 +349,87 @@ static void vyrtue_ast_walk_children(zend_ast *ast, struct vyrtue_preprocess_con
         zend_ast *replace_child = vyrtue_ast_walk(child, ctx);
 
         if (UNEXPECTED(replace_child != NULL && replace_child != child)) {
-            zend_ast_destroy(ast->child[i]);
+            vyrtue_ast_process_debug_replacement(child, replace_child);
+            zend_ast_destroy(child);
             ast->child[i] = replace_child;
         }
     }
+}
+
+VYRTUE_ATTR_NONNULL_ALL
+static void vyrtue_ast_walk_recurse(zend_ast *ast, struct vyrtue_preprocess_context *ctx)
+{
+    if (EXPECTED(zend_ast_is_list(ast))) {
+        vyrtue_ast_walk_list(ast, ctx);
+    } else {
+        vyrtue_ast_walk_children(ast, ctx);
+    }
+}
+
+VYRTUE_ATTR_NONNULL_ALL
+static zend_ast *vyrtue_ast_process_attributes(zend_ast *ast, zend_ast *parent_ast, vyrtue_ast_enter_leave_fn fn, struct vyrtue_preprocess_context *ctx)
+{
+    zend_ast_list *list = zend_ast_get_list(ast);
+    uint32_t g, i, j;
+
+    ZEND_ASSERT(ast->kind == ZEND_AST_ATTRIBUTE_LIST);
+
+    for (g = 0; g < list->children; g++) {
+        zend_ast_list *group = zend_ast_get_list(list->child[g]);
+
+        ZEND_ASSERT(group->kind == ZEND_AST_ATTRIBUTE_GROUP);
+
+        for (i = 0; i < group->children; i++) {
+            ZEND_ASSERT(group->child[i]->kind == ZEND_AST_ATTRIBUTE);
+
+            zend_ast *el = group->child[i];
+            zend_string *name = vyrtue_resolve_class_name_ast(el->child[0], ctx);
+            if (UNEXPECTED(name == NULL)) {
+                continue;
+            }
+
+            const struct vyrtue_visitor_array *visitors = vyrtue_get_attribute_visitors(name);
+            zend_ast *replace = fn(parent_ast, visitors, ctx);
+
+            if (UNEXPECTED(replace != NULL)) {
+                return replace;
+            }
+        }
+    }
+
+    return NULL;
+}
+
+VYRTUE_ATTR_NONNULL_ALL
+VYRTUE_ATTR_WARN_UNUSED_RESULT
+static zend_ast *vyrtue_ast_process_class_enter(zend_ast *ast, struct vyrtue_preprocess_context *ctx)
+{
+    zend_ast_decl *decl = (zend_ast_decl *) ast;
+
+    if (decl->child[3]) {
+        zend_ast *replace = vyrtue_ast_process_attributes(decl->child[3], ast, vyrtue_ast_enter_node, ctx);
+        if (UNEXPECTED(replace != NULL)) {
+            return replace;
+        }
+    }
+
+    return NULL;
+}
+
+VYRTUE_ATTR_NONNULL_ALL
+VYRTUE_ATTR_WARN_UNUSED_RESULT
+static zend_ast *vyrtue_ast_process_class_leave(zend_ast *ast, struct vyrtue_preprocess_context *ctx)
+{
+    zend_ast_decl *decl = (zend_ast_decl *) ast;
+
+    if (decl->child[3]) {
+        zend_ast *replace = vyrtue_ast_process_attributes(decl->child[3], ast, vyrtue_ast_leave_node, ctx);
+        if (UNEXPECTED(replace != NULL)) {
+            return replace;
+        }
+    }
+
+    return NULL;
 }
 
 VYRTUE_ATTR_NONNULL_ALL
@@ -511,20 +457,14 @@ static zend_ast *vyrtue_ast_walk(zend_ast *ast, struct vyrtue_preprocess_context
         case ZEND_AST_CLASS: {
             decl = (zend_ast_decl *) ast;
             if (EXPECTED(decl->child[2])) {
-                if (EXPECTED(zend_ast_is_list(decl->child[2]))) {
-                    vyrtue_ast_walk_list(decl->child[2], ctx);
-                } else {
-                    vyrtue_ast_walk_children(decl->child[2], ctx);
-                }
+                vyrtue_ast_walk_recurse(decl->child[2], ctx);
             }
             break;
         }
-    }
-
-    if (zend_ast_is_list(ast)) {
-        vyrtue_ast_walk_list(ast, ctx);
-    } else {
-        vyrtue_ast_walk_children(ast, ctx);
+        default: {
+            vyrtue_ast_walk_recurse(ast, ctx);
+            break;
+        }
     }
 
     replace = vyrtue_ast_leave_node(ast, visitors, ctx);
@@ -541,9 +481,9 @@ void vyrtue_ast_process_file(zend_ast *ast)
 {
     struct vyrtue_preprocess_context ctx = {0};
 
-    zend_ast *replace_child = vyrtue_ast_walk(ast, &ctx);
-    if (replace_child != NULL) {
-        zend_throw_exception(zend_ce_parse_error, "vyrtue visitor attempted to replace the root AST node", 0);
+    zend_ast *replace = vyrtue_ast_walk(ast, &ctx);
+    if (replace != NULL) {
+        zend_throw_exception(zend_ce_parse_error, "vyrtue visitor attempted to replace the root AST node which is unsupported", 0);
         return;
     }
 
@@ -565,6 +505,7 @@ PHP_MINIT_FUNCTION(vyrtue_preprocess)
     vyrtue_register_kind_visitor(ZEND_AST_GROUP_USE, vyrtue_ast_process_group_use_enter, vyrtue_ast_process_group_use_leave);
     vyrtue_register_kind_visitor(ZEND_AST_NAMESPACE, vyrtue_ast_process_namespace_enter, vyrtue_ast_process_namespace_leave);
     vyrtue_register_kind_visitor(ZEND_AST_CALL, vyrtue_ast_process_call_enter, vyrtue_ast_process_call_leave);
+    vyrtue_register_kind_visitor(ZEND_AST_CLASS, vyrtue_ast_process_class_enter, vyrtue_ast_process_class_leave);
 
     return SUCCESS;
 }

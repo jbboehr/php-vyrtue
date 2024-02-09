@@ -77,6 +77,7 @@ struct vyrtue_preprocess_context;
 typedef zend_ast *(*vyrtue_ast_callback)(zend_ast *ast, struct vyrtue_preprocess_context *ctx);
 
 ZEND_BEGIN_MODULE_GLOBALS(vyrtue)
+    HashTable attribute_visitors;
     HashTable kind_hooks;
     HashTable function_hooks;
 ZEND_END_MODULE_GLOBALS(vyrtue)
@@ -91,10 +92,19 @@ VYRTUE_ATTR_NONNULL_ALL
 void vyrtue_ast_process_file(zend_ast *ast);
 
 VYRTUE_PUBLIC
-void vyrtue_register_kind_visitor(enum _zend_ast_kind kind, vyrtue_ast_callback enter, vyrtue_ast_callback leave);
+void vyrtue_register_attribute_visitor(zend_string *attribute_name, vyrtue_ast_callback enter, vyrtue_ast_callback leave);
 
 VYRTUE_PUBLIC
 void vyrtue_register_function_visitor(zend_string *function_name, vyrtue_ast_callback enter, vyrtue_ast_callback leave);
+
+VYRTUE_PUBLIC
+void vyrtue_register_kind_visitor(enum _zend_ast_kind kind, vyrtue_ast_callback enter, vyrtue_ast_callback leave);
+
+VYRTUE_PUBLIC
+VYRTUE_ATTR_NONNULL_ALL
+VYRTUE_ATTR_RETURNS_NONNULL
+VYRTUE_ATTR_WARN_UNUSED_RESULT
+const struct vyrtue_visitor_array *vyrtue_get_attribute_visitors(zend_string *attribute_name);
 
 VYRTUE_PUBLIC
 VYRTUE_ATTR_NONNULL_ALL

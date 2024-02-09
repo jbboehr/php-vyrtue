@@ -10,4 +10,5 @@ namespace FooBar;
 use function VyrtueExt\Debug\sample_replacement_function;
 var_dump(sample_replacement_function());
 --EXPECT--
+entering sample function
 int(12345)

@@ -18,6 +18,9 @@
 +----------------------------------------------------------------------+
 */
 
+// These are all mostly based on zend_compile functions, so I suppose
+// they are probably covered under the zend license
+
 #include <Zend/zend_API.h>
 #include <stdbool.h>
 
@@ -33,27 +36,35 @@ static bool zend_get_unqualified_name(const zend_string *name, const char **resu
     return 0;
 }
 
-static char *zend_get_use_type_str(uint32_t type)
-{
-    switch (type) {
-        case ZEND_SYMBOL_CLASS:
-            return "";
-        case ZEND_SYMBOL_FUNCTION:
-            return " function";
-        case ZEND_SYMBOL_CONST:
-            return " const";
-            EMPTY_SWITCH_DEFAULT_CASE()
-    }
-
-    return " unknown";
-}
-
-static void str_dtor(zval *zv)
-{
-    zend_string_release_ex(Z_STR_P(zv), 0);
-}
-
 static zend_string *zend_concat_names(char *name1, size_t name1_len, char *name2, size_t name2_len)
 {
     return zend_string_concat3(name1, name1_len, "\\", 1, name2, name2_len);
 }
+
+VYRTUE_LOCAL
+VYRTUE_ATTR_NONNULL_ALL
+VYRTUE_ATTR_WARN_UNUSED_RESULT
+HashTable *vyrtue_get_import_ht(uint32_t type, struct vyrtue_preprocess_context *ctx);
+
+VYRTUE_LOCAL
+VYRTUE_ATTR_NONNULL_ALL
+void vyrtue_reset_import_tables(struct vyrtue_preprocess_context *ctx);
+
+VYRTUE_LOCAL
+VYRTUE_ATTR_NONNULL_ALL
+void vyrtue_end_namespace(struct vyrtue_preprocess_context *ctx);
+
+VYRTUE_LOCAL
+VYRTUE_ATTR_NONNULL_ALL
+VYRTUE_ATTR_WARN_UNUSED_RESULT
+zend_string *vyrtue_resolve_function_name(zend_string *name, uint32_t type, bool *is_fully_qualified, struct vyrtue_preprocess_context *ctx);
+
+VYRTUE_LOCAL
+VYRTUE_ATTR_NONNULL(3)
+VYRTUE_ATTR_WARN_UNUSED_RESULT
+zend_string *vyrtue_resolve_class_name(zend_string *name, uint32_t type, struct vyrtue_preprocess_context *ctx);
+
+VYRTUE_LOCAL
+VYRTUE_ATTR_NONNULL_ALL
+VYRTUE_ATTR_WARN_UNUSED_RESULT
+zend_string *vyrtue_resolve_class_name_ast(zend_ast *ast, struct vyrtue_preprocess_context *ctx);

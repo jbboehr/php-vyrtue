@@ -111,12 +111,14 @@ static PHP_GINIT_FUNCTION(vyrtue)
     ZEND_TSRMLS_CACHE_UPDATE();
 #endif
     memset(vyrtue_globals, 0, sizeof(zend_vyrtue_globals));
+    zend_hash_init(&vyrtue_globals->attribute_visitors, 16, NULL, NULL, 1);
     zend_hash_init(&vyrtue_globals->function_hooks, 16, NULL, NULL, 1);
     zend_hash_init(&vyrtue_globals->kind_hooks, 16, NULL, NULL, 1);
 }
 
 static PHP_GSHUTDOWN_FUNCTION(vyrtue)
 {
+    zend_hash_destroy(&vyrtue_globals->attribute_visitors);
     zend_hash_destroy(&vyrtue_globals->function_hooks);
     zend_hash_destroy(&vyrtue_globals->kind_hooks);
 }

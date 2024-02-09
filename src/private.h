@@ -42,6 +42,8 @@ struct vyrtue_visitor_array
     struct vyrtue_visitor data[];
 };
 
+typedef zend_ast *(*vyrtue_ast_enter_leave_fn)(zend_ast *ast, const struct vyrtue_visitor_array *visitors, struct vyrtue_preprocess_context *ctx);
+
 #ifdef VYRTUE_DEBUG
 VYRTUE_LOCAL extern PHP_MINIT_FUNCTION(vyrtue_debug);
 #endif

@@ -15,4 +15,5 @@ class BarBat {
 }
 (new BarBat())->sayHello();
 --EXPECT--
+entering sample function
 int(12345)
