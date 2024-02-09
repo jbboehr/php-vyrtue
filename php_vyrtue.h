@@ -40,6 +40,22 @@
 #define VYRTUE_LOCAL
 #endif
 
+#if (__GNUC__ >= 3) || defined(__clang__)
+#define VYRTUE_ATTR_NONNULL(...) __attribute__((nonnull(__VA_ARGS__)))
+#define VYRTUE_ATTR_NONNULL_ALL __attribute__((nonnull))
+#define VYRTUE_ATTR_WARN_UNUSED_RESULT __attribute__((warn_unused_result))
+#else
+#define VYRTUE_ATTR_NONNULL(...)
+#define VYRTUE_ATTR_NONNULL_ALL
+#define VYRTUE_ATTR_WARN_UNUSED_RESULT
+#endif
+
+#if ((__GNUC__ >= 5) || ((__GNUC__ >= 4) && (__GNUC_MINOR__ >= 9))) || defined(__clang__)
+#define VYRTUE_ATTR_RETURNS_NONNULL __attribute__((returns_nonnull))
+#else
+#define VYRTUE_ATTR_RETURNS_NONNULL
+#endif
+
 extern zend_module_entry vyrtue_module_entry;
 #define phpext_vyrtue_ptr &vyrtue_module_entry
 
@@ -57,19 +73,40 @@ extern zend_module_entry vyrtue_module_entry;
 ZEND_TSRMLS_CACHE_EXTERN();
 #endif
 
+struct vyrtue_preprocess_context;
+typedef zend_ast *(*vyrtue_ast_callback)(zend_ast *ast, struct vyrtue_preprocess_context *ctx);
+
 ZEND_BEGIN_MODULE_GLOBALS(vyrtue)
     HashTable kind_hooks;
     HashTable function_hooks;
 ZEND_END_MODULE_GLOBALS(vyrtue)
 
-struct vyrtue_preprocess_context;
-typedef zend_ast *(*vyrtue_ast_callback)(zend_ast *ast, struct vyrtue_preprocess_context *ctx);
-
-VYRTUE_PUBLIC void vyrtue_register_kind_visitor(enum _zend_ast_kind kind, vyrtue_ast_callback enter, vyrtue_ast_callback leave);
-
-VYRTUE_PUBLIC void vyrtue_register_function_visitor(zend_string *function_name, vyrtue_ast_callback enter, vyrtue_ast_callback leave);
-
 ZEND_EXTERN_MODULE_GLOBALS(vyrtue);
+
+VYRTUE_PUBLIC
+zend_never_inline void vyrtue_ast_process(zend_ast *ast);
+
+VYRTUE_PUBLIC
+VYRTUE_ATTR_NONNULL_ALL
+void vyrtue_ast_process_file(zend_ast *ast);
+
+VYRTUE_PUBLIC
+void vyrtue_register_kind_visitor(enum _zend_ast_kind kind, vyrtue_ast_callback enter, vyrtue_ast_callback leave);
+
+VYRTUE_PUBLIC
+void vyrtue_register_function_visitor(zend_string *function_name, vyrtue_ast_callback enter, vyrtue_ast_callback leave);
+
+VYRTUE_PUBLIC
+VYRTUE_ATTR_NONNULL_ALL
+VYRTUE_ATTR_RETURNS_NONNULL
+VYRTUE_ATTR_WARN_UNUSED_RESULT
+const struct vyrtue_visitor_array *vyrtue_get_function_visitors(zend_string *function_name);
+
+VYRTUE_PUBLIC
+VYRTUE_ATTR_NONNULL_ALL
+VYRTUE_ATTR_RETURNS_NONNULL
+VYRTUE_ATTR_WARN_UNUSED_RESULT
+const struct vyrtue_visitor_array *vyrtue_get_kind_visitors(enum _zend_ast_kind kind);
 
 #endif /* PHP_VYRTUE_H */
 

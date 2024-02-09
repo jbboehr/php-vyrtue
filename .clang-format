@@ -28,6 +28,10 @@ AttributeMacros:
   - __capability
   - VYRTUE_LOCAL
   - VYRTUE_PUBLIC
+  - VYRTUE_ATTR_RETURNS_NONNULL
+  - VYRTUE_ATTR_NONNULL
+  - VYRTUE_ATTR_NONNULL_ALL
+  - VYRTUE_ATTR_WARN_UNUSED_RESULT
   - zend_never_inline
   - zend_always_inline
 BinPackArguments: false

@@ -19,6 +19,16 @@
 
 #include <Zend/zend_modules.h>
 
+struct vyrtue_preprocess_context
+{
+    bool in_namespace;
+    bool in_group_use;
+    zend_string *current_namespace;
+    HashTable *imports;
+    HashTable *imports_function;
+    HashTable *imports_const;
+};
+
 struct vyrtue_visitor
 {
     vyrtue_ast_callback enter;
@@ -36,6 +46,3 @@ struct vyrtue_visitor_array
 VYRTUE_LOCAL extern PHP_MINIT_FUNCTION(vyrtue_debug);
 #endif
 VYRTUE_LOCAL extern PHP_MINIT_FUNCTION(vyrtue_preprocess);
-
-const struct vyrtue_visitor_array *vyrtue_get_kind_visitors(enum _zend_ast_kind kind);
-const struct vyrtue_visitor_array *vyrtue_get_function_visitors(zend_string *function_name);

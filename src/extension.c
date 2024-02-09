@@ -39,12 +39,11 @@ ZEND_DECLARE_MODULE_GLOBALS(vyrtue);
 
 static void (*original_ast_process)(zend_ast *ast) = NULL;
 
-void vyrtue_ast_process_file(zend_ast *ast);
-
 PHP_INI_BEGIN()
 PHP_INI_END()
 
-VYRTUE_PUBLIC zend_never_inline void vyrtue_ast_process(zend_ast *ast)
+VYRTUE_PUBLIC
+zend_never_inline void vyrtue_ast_process(zend_ast *ast)
 {
     if (NULL != original_ast_process) {
         original_ast_process(ast);

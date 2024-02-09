@@ -62,7 +62,8 @@ VYRTUE_PUBLIC void vyrtue_register_function_visitor(zend_string *function_name, 
     zend_hash_update_ptr(&VYRTUE_G(function_hooks), function_name, arr);
 }
 
-VYRTUE_PUBLIC void vyrtue_register_kind_visitor(enum _zend_ast_kind kind, vyrtue_ast_callback enter, vyrtue_ast_callback leave)
+VYRTUE_PUBLIC
+void vyrtue_register_kind_visitor(enum _zend_ast_kind kind, vyrtue_ast_callback enter, vyrtue_ast_callback leave)
 {
     struct vyrtue_visitor visitor = {
         .enter = enter,
@@ -87,6 +88,10 @@ VYRTUE_PUBLIC void vyrtue_register_kind_visitor(enum _zend_ast_kind kind, vyrtue
     zend_hash_index_update_ptr(&VYRTUE_G(kind_hooks), (zend_ulong) kind, arr);
 }
 
+VYRTUE_PUBLIC
+VYRTUE_ATTR_NONNULL_ALL
+VYRTUE_ATTR_RETURNS_NONNULL
+VYRTUE_ATTR_WARN_UNUSED_RESULT
 const struct vyrtue_visitor_array *vyrtue_get_function_visitors(zend_string *function_name)
 {
     const struct vyrtue_visitor_array *arr = zend_hash_find_ptr(&VYRTUE_G(function_hooks), function_name);
@@ -97,6 +102,10 @@ const struct vyrtue_visitor_array *vyrtue_get_function_visitors(zend_string *fun
     }
 }
 
+VYRTUE_PUBLIC
+VYRTUE_ATTR_NONNULL_ALL
+VYRTUE_ATTR_RETURNS_NONNULL
+VYRTUE_ATTR_WARN_UNUSED_RESULT
 const struct vyrtue_visitor_array *vyrtue_get_kind_visitors(enum _zend_ast_kind kind)
 {
     const struct vyrtue_visitor_array *arr = zend_hash_index_find_ptr(&VYRTUE_G(kind_hooks), (zend_ulong) kind);
