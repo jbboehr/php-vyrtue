@@ -17,11 +17,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <Zend/zend_modules.h>
+#ifndef PHP_VYRTUE_VISITOR_H
+#define PHP_VYRTUE_VISITOR_H
 
-struct vyrtue_context;
+#include <Zend/zend_ast.h>
+#include "php_vyrtue.h"
 
-#ifdef VYRTUE_DEBUG
-VYRTUE_LOCAL extern PHP_MINIT_FUNCTION(vyrtue_debug);
+struct vyrtue_visitor
+{
+    const char *name;
+    vyrtue_ast_callback enter;
+    vyrtue_ast_callback leave;
+};
+
+struct vyrtue_visitor_array
+{
+    size_t size;
+    size_t length;
+    struct vyrtue_visitor data[];
+};
+
+typedef zend_ast *(*vyrtue_ast_enter_leave_fn)(zend_ast *ast, const struct vyrtue_visitor_array *visitors, struct vyrtue_context *ctx);
+
 #endif
-VYRTUE_LOCAL extern PHP_MINIT_FUNCTION(vyrtue_process);

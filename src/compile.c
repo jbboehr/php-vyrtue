@@ -30,13 +30,12 @@
 
 #include "Zend/zend_API.h"
 #include "Zend/zend_compile.h"
-#include "Zend/zend_exceptions.h"
 #include "main/php.h"
 #include "main/php_streams.h"
-#include "ext/standard/php_var.h"
+
 #include "php_vyrtue.h"
+#include "context.h"
 #include "compile.h"
-#include "private.h"
 
 static void str_dtor(zval *zv)
 {
@@ -46,7 +45,7 @@ static void str_dtor(zval *zv)
 VYRTUE_LOCAL
 VYRTUE_ATTR_NONNULL_ALL
 VYRTUE_ATTR_WARN_UNUSED_RESULT
-HashTable *vyrtue_get_import_ht(uint32_t type, struct vyrtue_preprocess_context *ctx)
+HashTable *vyrtue_get_import_ht(uint32_t type, struct vyrtue_context *ctx)
 {
     switch (type) {
         case ZEND_SYMBOL_CLASS:
@@ -74,7 +73,7 @@ HashTable *vyrtue_get_import_ht(uint32_t type, struct vyrtue_preprocess_context 
 
 VYRTUE_LOCAL
 VYRTUE_ATTR_NONNULL_ALL
-void vyrtue_reset_import_tables(struct vyrtue_preprocess_context *ctx)
+void vyrtue_reset_import_tables(struct vyrtue_context *ctx)
 {
     if (ctx->imports) {
         zend_hash_destroy(ctx->imports);
@@ -97,7 +96,7 @@ void vyrtue_reset_import_tables(struct vyrtue_preprocess_context *ctx)
 
 VYRTUE_LOCAL
 VYRTUE_ATTR_NONNULL_ALL
-void vyrtue_end_namespace(struct vyrtue_preprocess_context *ctx)
+void vyrtue_end_namespace(struct vyrtue_context *ctx)
 {
     ctx->in_namespace = false;
     vyrtue_reset_import_tables(ctx);
@@ -113,7 +112,7 @@ void vyrtue_end_namespace(struct vyrtue_preprocess_context *ctx)
 
 VYRTUE_ATTR_NONNULL_ALL
 VYRTUE_ATTR_WARN_UNUSED_RESULT
-static zend_string *vyrtue_prefix_with_ns(zend_string *name, struct vyrtue_preprocess_context *ctx)
+static zend_string *vyrtue_prefix_with_ns(zend_string *name, struct vyrtue_context *ctx)
 {
     if (ctx->current_namespace) {
         zend_string *ns = ctx->current_namespace;
@@ -126,7 +125,7 @@ static zend_string *vyrtue_prefix_with_ns(zend_string *name, struct vyrtue_prepr
 VYRTUE_ATTR_NONNULL(1, 3, 6)
 VYRTUE_ATTR_WARN_UNUSED_RESULT
 static zend_string *vyrtue_resolve_non_class_name(
-    zend_string *name, uint32_t type, bool *is_fully_qualified, bool case_sensitive, HashTable *current_import_sub, struct vyrtue_preprocess_context *ctx
+    zend_string *name, uint32_t type, bool *is_fully_qualified, bool case_sensitive, HashTable *current_import_sub, struct vyrtue_context *ctx
 )
 {
     char *compound;
@@ -184,7 +183,7 @@ static zend_string *vyrtue_resolve_non_class_name(
 VYRTUE_LOCAL
 VYRTUE_ATTR_NONNULL_ALL
 VYRTUE_ATTR_WARN_UNUSED_RESULT
-zend_string *vyrtue_resolve_function_name(zend_string *name, uint32_t type, bool *is_fully_qualified, struct vyrtue_preprocess_context *ctx)
+zend_string *vyrtue_resolve_function_name(zend_string *name, uint32_t type, bool *is_fully_qualified, struct vyrtue_context *ctx)
 {
     return vyrtue_resolve_non_class_name(name, type, is_fully_qualified, 0, ctx->imports_function, ctx);
 }
@@ -207,7 +206,7 @@ static uint32_t vyrtue_get_class_fetch_type(zend_string *name)
 VYRTUE_LOCAL
 VYRTUE_ATTR_NONNULL(3)
 VYRTUE_ATTR_WARN_UNUSED_RESULT
-zend_string *vyrtue_resolve_class_name(zend_string *name, uint32_t type, struct vyrtue_preprocess_context *ctx)
+zend_string *vyrtue_resolve_class_name(zend_string *name, uint32_t type, struct vyrtue_context *ctx)
 {
     char *compound;
 
@@ -269,7 +268,7 @@ zend_string *vyrtue_resolve_class_name(zend_string *name, uint32_t type, struct 
 VYRTUE_LOCAL
 VYRTUE_ATTR_NONNULL_ALL
 VYRTUE_ATTR_WARN_UNUSED_RESULT
-zend_string *vyrtue_resolve_class_name_ast(zend_ast *ast, struct vyrtue_preprocess_context *ctx)
+zend_string *vyrtue_resolve_class_name_ast(zend_ast *ast, struct vyrtue_context *ctx)
 {
     zval *class_name = zend_ast_get_zval(ast);
     if (Z_TYPE_P(class_name) != IS_STRING) {

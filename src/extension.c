@@ -33,6 +33,7 @@
 #include "ext/standard/info.h"
 
 #include "php_vyrtue.h"
+#include "visitor.h"
 #include "private.h"
 
 ZEND_DECLARE_MODULE_GLOBALS(vyrtue);
@@ -80,7 +81,7 @@ static PHP_MINIT_FUNCTION(vyrtue)
         zend_ast_process = vyrtue_ast_process;
     }
 
-    PHP_MINIT(vyrtue_preprocess)(INIT_FUNC_ARGS_PASSTHRU);
+    PHP_MINIT(vyrtue_process)(INIT_FUNC_ARGS_PASSTHRU);
 #ifdef VYRTUE_DEBUG
     PHP_MINIT(vyrtue_debug)(INIT_FUNC_ARGS_PASSTHRU);
 #endif
@@ -195,12 +196,3 @@ ZEND_TSRMLS_CACHE_DEFINE()
 #endif
 ZEND_GET_MODULE(vyrtue) // Common for all PHP extensions which are build as shared modules
 #endif
-
-/*
- * Local variables:
- * tab-width: 4
- * c-basic-offset: 4
- * End:
- * vim600: fdm=marker
- * vim: et sw=4 ts=4
- */

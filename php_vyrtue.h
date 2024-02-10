@@ -73,8 +73,8 @@ extern zend_module_entry vyrtue_module_entry;
 ZEND_TSRMLS_CACHE_EXTERN();
 #endif
 
-struct vyrtue_preprocess_context;
-typedef zend_ast *(*vyrtue_ast_callback)(zend_ast *ast, struct vyrtue_preprocess_context *ctx);
+struct vyrtue_context;
+typedef zend_ast *(*vyrtue_ast_callback)(zend_ast *ast, struct vyrtue_context *ctx);
 
 ZEND_BEGIN_MODULE_GLOBALS(vyrtue)
     HashTable attribute_visitors;
@@ -83,6 +83,14 @@ ZEND_BEGIN_MODULE_GLOBALS(vyrtue)
 ZEND_END_MODULE_GLOBALS(vyrtue)
 
 ZEND_EXTERN_MODULE_GLOBALS(vyrtue);
+
+VYRTUE_PUBLIC
+VYRTUE_ATTR_NONNULL_ALL
+zend_ast *vyrtue_context_node_stack_top(struct vyrtue_context *ctx);
+
+VYRTUE_PUBLIC
+VYRTUE_ATTR_NONNULL_ALL
+zend_ast *vyrtue_context_scope_stack_top(struct vyrtue_context *ctx);
 
 VYRTUE_PUBLIC
 zend_never_inline void vyrtue_ast_process(zend_ast *ast);
@@ -118,13 +126,7 @@ VYRTUE_ATTR_RETURNS_NONNULL
 VYRTUE_ATTR_WARN_UNUSED_RESULT
 const struct vyrtue_visitor_array *vyrtue_get_kind_visitors(enum _zend_ast_kind kind);
 
-#endif /* PHP_VYRTUE_H */
+// backwards compatibility
+#define vyrtue_preprocess_context vyrtue_context
 
-/*
- * Local variables:
- * tab-width: 4
- * c-basic-offset: 4
- * End:
- * vim600: fdm=marker
- * vim: et sw=4 ts=4
- */
+#endif /* PHP_VYRTUE_H */

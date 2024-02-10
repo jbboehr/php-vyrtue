@@ -29,11 +29,13 @@
 #include "main/php.h"
 #include "main/php_streams.h"
 #include "ext/standard/php_var.h"
+
 #include "php_vyrtue.h"
 #include "compile.h"
-#include "private.h"
+#include "context.h"
+#include "visitor.h"
 
-static zend_ast *vyrtue_ast_walk(zend_ast *ast, struct vyrtue_preprocess_context *ctx);
+static zend_ast *vyrtue_ast_walk(zend_ast *ast, struct vyrtue_context *ctx);
 
 static void dump_ht(HashTable *ht)
 {
@@ -72,7 +74,7 @@ static void vyrtue_ast_process_debug_replacement(zend_ast *before, zend_ast *aft
  */
 VYRTUE_ATTR_NONNULL_ALL
 VYRTUE_ATTR_WARN_UNUSED_RESULT
-static zend_ast *vyrtue_ast_process_namespace_enter(zend_ast *ast, struct vyrtue_preprocess_context *ctx)
+static zend_ast *vyrtue_ast_process_namespace_enter(zend_ast *ast, struct vyrtue_context *ctx)
 {
     zend_ast *name_ast = ast->child[0];
     zend_ast *stmt_ast = ast->child[1];
@@ -105,7 +107,7 @@ static zend_ast *vyrtue_ast_process_namespace_enter(zend_ast *ast, struct vyrtue
 
 VYRTUE_ATTR_NONNULL_ALL
 VYRTUE_ATTR_WARN_UNUSED_RESULT
-static zend_ast *vyrtue_ast_process_namespace_leave(zend_ast *ast, struct vyrtue_preprocess_context *ctx)
+static zend_ast *vyrtue_ast_process_namespace_leave(zend_ast *ast, struct vyrtue_context *ctx)
 {
     zend_ast *stmt_ast = ast->child[1];
 
@@ -121,7 +123,7 @@ static zend_ast *vyrtue_ast_process_namespace_leave(zend_ast *ast, struct vyrtue
  */
 VYRTUE_ATTR_NONNULL_ALL
 VYRTUE_ATTR_WARN_UNUSED_RESULT
-static zend_ast *vyrtue_ast_process_use_enter(zend_ast *ast, struct vyrtue_preprocess_context *ctx)
+static zend_ast *vyrtue_ast_process_use_enter(zend_ast *ast, struct vyrtue_context *ctx)
 {
     zend_ast_list *list = zend_ast_get_list(ast);
     uint32_t i;
@@ -192,7 +194,7 @@ static zend_ast *vyrtue_ast_process_use_enter(zend_ast *ast, struct vyrtue_prepr
  */
 VYRTUE_ATTR_NONNULL_ALL
 VYRTUE_ATTR_WARN_UNUSED_RESULT
-static zend_ast *vyrtue_ast_process_group_use_enter(zend_ast *ast, struct vyrtue_preprocess_context *ctx)
+static zend_ast *vyrtue_ast_process_group_use_enter(zend_ast *ast, struct vyrtue_context *ctx)
 {
     uint32_t i;
     zend_string *ns = zend_ast_get_str(ast->child[0]);
@@ -222,7 +224,7 @@ static zend_ast *vyrtue_ast_process_group_use_enter(zend_ast *ast, struct vyrtue
 
 VYRTUE_ATTR_NONNULL_ALL
 VYRTUE_ATTR_WARN_UNUSED_RESULT
-static zend_ast *vyrtue_ast_process_group_use_leave(zend_ast *ast, struct vyrtue_preprocess_context *ctx)
+static zend_ast *vyrtue_ast_process_group_use_leave(zend_ast *ast, struct vyrtue_context *ctx)
 {
     ctx->in_group_use = false;
 
@@ -231,7 +233,7 @@ static zend_ast *vyrtue_ast_process_group_use_leave(zend_ast *ast, struct vyrtue
 
 VYRTUE_ATTR_NONNULL_ALL
 VYRTUE_ATTR_WARN_UNUSED_RESULT
-static zend_ast *vyrtue_ast_enter_node(zend_ast *ast, const struct vyrtue_visitor_array *visitors, struct vyrtue_preprocess_context *ctx)
+static zend_ast *vyrtue_ast_enter_node(zend_ast *ast, const struct vyrtue_visitor_array *visitors, struct vyrtue_context *ctx)
 {
     zend_ast *rv = NULL;
 
@@ -250,7 +252,7 @@ static zend_ast *vyrtue_ast_enter_node(zend_ast *ast, const struct vyrtue_visito
 
 VYRTUE_ATTR_NONNULL_ALL
 VYRTUE_ATTR_WARN_UNUSED_RESULT
-static zend_ast *vyrtue_ast_leave_node(zend_ast *ast, const struct vyrtue_visitor_array *visitors, struct vyrtue_preprocess_context *ctx)
+static zend_ast *vyrtue_ast_leave_node(zend_ast *ast, const struct vyrtue_visitor_array *visitors, struct vyrtue_context *ctx)
 {
     zend_ast *rv = NULL;
 
@@ -269,7 +271,7 @@ static zend_ast *vyrtue_ast_leave_node(zend_ast *ast, const struct vyrtue_visito
 
 VYRTUE_ATTR_NONNULL_ALL
 VYRTUE_ATTR_WARN_UNUSED_RESULT
-static zend_ast *vyrtue_ast_process_call_enter(zend_ast *ast, struct vyrtue_preprocess_context *ctx)
+static zend_ast *vyrtue_ast_process_call_enter(zend_ast *ast, struct vyrtue_context *ctx)
 {
     zend_ast *name_ast = ast->child[0];
 
@@ -302,7 +304,7 @@ static zend_ast *vyrtue_ast_process_call_enter(zend_ast *ast, struct vyrtue_prep
 
 VYRTUE_ATTR_NONNULL_ALL
 VYRTUE_ATTR_WARN_UNUSED_RESULT
-static zend_ast *vyrtue_ast_process_call_leave(zend_ast *ast, struct vyrtue_preprocess_context *ctx)
+static zend_ast *vyrtue_ast_process_call_leave(zend_ast *ast, struct vyrtue_context *ctx)
 {
     zend_ast *name_ast = ast->child[0];
 
@@ -334,7 +336,7 @@ static zend_ast *vyrtue_ast_process_call_leave(zend_ast *ast, struct vyrtue_prep
 }
 
 VYRTUE_ATTR_NONNULL_ALL
-static void vyrtue_ast_walk_list(zend_ast *ast, struct vyrtue_preprocess_context *ctx)
+static void vyrtue_ast_walk_list(zend_ast *ast, struct vyrtue_context *ctx)
 {
     zend_ast_list *list = zend_ast_get_list(ast);
 
@@ -355,7 +357,7 @@ static void vyrtue_ast_walk_list(zend_ast *ast, struct vyrtue_preprocess_context
 }
 
 VYRTUE_ATTR_NONNULL_ALL
-static void vyrtue_ast_walk_children(zend_ast *ast, struct vyrtue_preprocess_context *ctx)
+static void vyrtue_ast_walk_children(zend_ast *ast, struct vyrtue_context *ctx)
 {
     uint32_t i, children = zend_ast_get_num_children(ast);
     for (i = 0; i < children; i++) {
@@ -375,7 +377,7 @@ static void vyrtue_ast_walk_children(zend_ast *ast, struct vyrtue_preprocess_con
 }
 
 VYRTUE_ATTR_NONNULL_ALL
-static void vyrtue_ast_walk_recurse(zend_ast *ast, struct vyrtue_preprocess_context *ctx)
+static void vyrtue_ast_walk_recurse(zend_ast *ast, struct vyrtue_context *ctx)
 {
     if (EXPECTED(zend_ast_is_list(ast))) {
         vyrtue_ast_walk_list(ast, ctx);
@@ -385,7 +387,7 @@ static void vyrtue_ast_walk_recurse(zend_ast *ast, struct vyrtue_preprocess_cont
 }
 
 VYRTUE_ATTR_NONNULL_ALL
-static zend_ast *vyrtue_ast_process_attributes(zend_ast *ast, zend_ast *parent_ast, vyrtue_ast_enter_leave_fn fn, struct vyrtue_preprocess_context *ctx)
+static zend_ast *vyrtue_ast_process_attributes(zend_ast *ast, zend_ast *parent_ast, vyrtue_ast_enter_leave_fn fn, struct vyrtue_context *ctx)
 {
     zend_ast_list *list = zend_ast_get_list(ast);
     uint32_t g, i, j;
@@ -420,7 +422,7 @@ static zend_ast *vyrtue_ast_process_attributes(zend_ast *ast, zend_ast *parent_a
 
 VYRTUE_ATTR_NONNULL_ALL
 VYRTUE_ATTR_WARN_UNUSED_RESULT
-static zend_ast *vyrtue_ast_process_class_enter(zend_ast *ast, struct vyrtue_preprocess_context *ctx)
+static zend_ast *vyrtue_ast_process_class_enter(zend_ast *ast, struct vyrtue_context *ctx)
 {
     zend_ast_decl *decl = (zend_ast_decl *) ast;
 
@@ -436,7 +438,7 @@ static zend_ast *vyrtue_ast_process_class_enter(zend_ast *ast, struct vyrtue_pre
 
 VYRTUE_ATTR_NONNULL_ALL
 VYRTUE_ATTR_WARN_UNUSED_RESULT
-static zend_ast *vyrtue_ast_process_class_leave(zend_ast *ast, struct vyrtue_preprocess_context *ctx)
+static zend_ast *vyrtue_ast_process_class_leave(zend_ast *ast, struct vyrtue_context *ctx)
 {
     zend_ast_decl *decl = (zend_ast_decl *) ast;
 
@@ -452,7 +454,7 @@ static zend_ast *vyrtue_ast_process_class_leave(zend_ast *ast, struct vyrtue_pre
 
 VYRTUE_ATTR_NONNULL_ALL
 VYRTUE_ATTR_WARN_UNUSED_RESULT
-static zend_ast *vyrtue_ast_walk(zend_ast *ast, struct vyrtue_preprocess_context *ctx)
+static zend_ast *vyrtue_ast_walk(zend_ast *ast, struct vyrtue_context *ctx)
 {
     zend_ast *replace;
     zend_ast_decl *decl;
@@ -467,16 +469,22 @@ static zend_ast *vyrtue_ast_walk(zend_ast *ast, struct vyrtue_preprocess_context
         return vyrtue_ast_walk(replace, ctx) ?: replace;
     }
 
+    vyrtue_context_stack_push(&ctx->node_stack, ast);
+
     switch (ast->kind) {
         case ZEND_AST_FUNC_DECL:
         case ZEND_AST_CLOSURE:
         case ZEND_AST_METHOD:
         case ZEND_AST_ARROW_FUNC:
         case ZEND_AST_CLASS: {
+            vyrtue_context_stack_push(&ctx->scope_stack, ast);
+
             decl = (zend_ast_decl *) ast;
             if (EXPECTED(decl->child[2])) {
                 vyrtue_ast_walk_recurse(decl->child[2], ctx);
             }
+
+            vyrtue_context_stack_pop(&ctx->scope_stack, ast);
             break;
         }
         default: {
@@ -484,6 +492,8 @@ static zend_ast *vyrtue_ast_walk(zend_ast *ast, struct vyrtue_preprocess_context
             break;
         }
     }
+
+    vyrtue_context_stack_pop(&ctx->node_stack, ast);
 
     replace = vyrtue_ast_leave_node(ast, visitors, ctx);
     if (replace) {
@@ -497,7 +507,7 @@ VYRTUE_PUBLIC
 VYRTUE_ATTR_NONNULL_ALL
 void vyrtue_ast_process_file(zend_ast *ast)
 {
-    struct vyrtue_preprocess_context ctx = {0};
+    struct vyrtue_context ctx = {0};
 
     zend_ast *replace = vyrtue_ast_walk(ast, &ctx);
     if (replace != NULL) {
@@ -514,10 +524,17 @@ void vyrtue_ast_process_file(zend_ast *ast)
 #endif
 
     vyrtue_end_namespace(&ctx);
+
+    if (UNEXPECTED(vyrtue_context_stack_count(&ctx.scope_stack) > 0)) {
+        zend_error(E_WARNING, "vyrtue: ast process ended with %lu items on the scope stack", vyrtue_context_stack_count(&ctx.scope_stack));
+    }
+    if (UNEXPECTED(vyrtue_context_stack_count(&ctx.node_stack) > 0)) {
+        zend_error(E_WARNING, "vyrtue: ast process ended with %lu items on the node stack", vyrtue_context_stack_count(&ctx.node_stack));
+    }
 }
 
 VYRTUE_LOCAL
-PHP_MINIT_FUNCTION(vyrtue_preprocess)
+PHP_MINIT_FUNCTION(vyrtue_process)
 {
     vyrtue_register_kind_visitor("vyrtue internal", ZEND_AST_USE, vyrtue_ast_process_use_enter, NULL);
     vyrtue_register_kind_visitor("vyrtue internal", ZEND_AST_GROUP_USE, vyrtue_ast_process_group_use_enter, vyrtue_ast_process_group_use_leave);

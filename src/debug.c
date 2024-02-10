@@ -29,42 +29,42 @@
 
 #include "php_vyrtue.h"
 
-static zend_ast *vyrtue_debug_sample_replacement_enter(zend_ast *ast, struct vyrtue_preprocess_context *ctx)
+static zend_ast *vyrtue_debug_sample_replacement_enter(zend_ast *ast, struct vyrtue_context *ctx)
 {
     fprintf(stderr, "entering sample function\n");
 
     return zend_ast_create_zval_from_long(12345);
 }
 
-static zend_ast *vyrtue_debug_sample_replacement_leave(zend_ast *ast, struct vyrtue_preprocess_context *ctx)
+static zend_ast *vyrtue_debug_sample_replacement_leave(zend_ast *ast, struct vyrtue_context *ctx)
 {
     fprintf(stderr, "leaving sample function\n");
 
     return NULL;
 }
 
-static zend_ast *vyrtue_debug_sample_function_enter(zend_ast *ast, struct vyrtue_preprocess_context *ctx)
+static zend_ast *vyrtue_debug_sample_function_enter(zend_ast *ast, struct vyrtue_context *ctx)
 {
     fprintf(stderr, "entering sample function\n");
 
     return NULL;
 }
 
-static zend_ast *vyrtue_debug_sample_function_leave(zend_ast *ast, struct vyrtue_preprocess_context *ctx)
+static zend_ast *vyrtue_debug_sample_function_leave(zend_ast *ast, struct vyrtue_context *ctx)
 {
     fprintf(stderr, "leaving sample function\n");
 
     return NULL;
 }
 
-static zend_ast *vyrtue_debug_sample_attribute_enter(zend_ast *ast, struct vyrtue_preprocess_context *ctx)
+static zend_ast *vyrtue_debug_sample_attribute_enter(zend_ast *ast, struct vyrtue_context *ctx)
 {
     fprintf(stderr, "entering sample attribute\n");
 
     return NULL;
 }
 
-static zend_ast *vyrtue_debug_sample_attribute_leave(zend_ast *ast, struct vyrtue_preprocess_context *ctx)
+static zend_ast *vyrtue_debug_sample_attribute_leave(zend_ast *ast, struct vyrtue_context *ctx)
 {
     fprintf(stderr, "leaving sample attribute\n");
 

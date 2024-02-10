@@ -17,11 +17,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <Zend/zend_modules.h>
-
-struct vyrtue_context;
-
-#ifdef VYRTUE_DEBUG
-VYRTUE_LOCAL extern PHP_MINIT_FUNCTION(vyrtue_debug);
+#ifdef HAVE_CONFIG_H
+#include "config.h"
 #endif
-VYRTUE_LOCAL extern PHP_MINIT_FUNCTION(vyrtue_process);
+
+#include <string.h>
+#include <stdbool.h>
+
+#include "Zend/zend_API.h"
+#include "main/php.h"
+
+#include "php_vyrtue.h"
+#include "context.h"
+
+VYRTUE_PUBLIC
+VYRTUE_ATTR_NONNULL_ALL
+zend_ast *vyrtue_context_node_stack_top(struct vyrtue_context *ctx)
+{
+    return vyrtue_context_stack_top(&ctx->node_stack);
+}
+
+VYRTUE_PUBLIC
+VYRTUE_ATTR_NONNULL_ALL
+zend_ast *vyrtue_context_scope_stack_top(struct vyrtue_context *ctx)
+{
+    return vyrtue_context_stack_top(&ctx->scope_stack);
+}

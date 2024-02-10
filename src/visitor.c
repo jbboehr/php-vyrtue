@@ -28,9 +28,10 @@
 #include "Zend/zend_exceptions.h"
 #include "main/php.h"
 #include "main/php_streams.h"
+
 #include "php_vyrtue.h"
 #include "compile.h"
-#include "private.h"
+#include "visitor.h"
 
 static const struct vyrtue_visitor_array EMPTY_VISITOR_ARRAY = {
     .size = 0,

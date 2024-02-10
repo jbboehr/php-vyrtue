@@ -21,8 +21,8 @@
 // These are all mostly based on zend_compile functions, so I suppose
 // they are probably covered under the zend license
 
-#include <Zend/zend_API.h>
 #include <stdbool.h>
+#include <Zend/zend_API.h>
 
 static bool zend_get_unqualified_name(const zend_string *name, const char **result, size_t *result_len)
 {
@@ -44,27 +44,27 @@ static zend_string *zend_concat_names(char *name1, size_t name1_len, char *name2
 VYRTUE_LOCAL
 VYRTUE_ATTR_NONNULL_ALL
 VYRTUE_ATTR_WARN_UNUSED_RESULT
-HashTable *vyrtue_get_import_ht(uint32_t type, struct vyrtue_preprocess_context *ctx);
+HashTable *vyrtue_get_import_ht(uint32_t type, struct vyrtue_context *ctx);
 
 VYRTUE_LOCAL
 VYRTUE_ATTR_NONNULL_ALL
-void vyrtue_reset_import_tables(struct vyrtue_preprocess_context *ctx);
+void vyrtue_reset_import_tables(struct vyrtue_context *ctx);
 
 VYRTUE_LOCAL
 VYRTUE_ATTR_NONNULL_ALL
-void vyrtue_end_namespace(struct vyrtue_preprocess_context *ctx);
+void vyrtue_end_namespace(struct vyrtue_context *ctx);
 
 VYRTUE_LOCAL
 VYRTUE_ATTR_NONNULL_ALL
 VYRTUE_ATTR_WARN_UNUSED_RESULT
-zend_string *vyrtue_resolve_function_name(zend_string *name, uint32_t type, bool *is_fully_qualified, struct vyrtue_preprocess_context *ctx);
+zend_string *vyrtue_resolve_function_name(zend_string *name, uint32_t type, bool *is_fully_qualified, struct vyrtue_context *ctx);
 
 VYRTUE_LOCAL
 VYRTUE_ATTR_NONNULL(3)
 VYRTUE_ATTR_WARN_UNUSED_RESULT
-zend_string *vyrtue_resolve_class_name(zend_string *name, uint32_t type, struct vyrtue_preprocess_context *ctx);
+zend_string *vyrtue_resolve_class_name(zend_string *name, uint32_t type, struct vyrtue_context *ctx);
 
 VYRTUE_LOCAL
 VYRTUE_ATTR_NONNULL_ALL
 VYRTUE_ATTR_WARN_UNUSED_RESULT
-zend_string *vyrtue_resolve_class_name_ast(zend_ast *ast, struct vyrtue_preprocess_context *ctx);
+zend_string *vyrtue_resolve_class_name_ast(zend_ast *ast, struct vyrtue_context *ctx);

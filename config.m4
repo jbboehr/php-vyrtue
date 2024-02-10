@@ -46,8 +46,9 @@ if test "$PHP_VYRTUE" != "no"; then
 
     PHP_VYRTUE_ADD_SOURCES([
         src/compile.c
+        src/context.c
         src/extension.c
-        src/preprocess.c
+        src/process.c
         src/visitor.c
     ])
 
