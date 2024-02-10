@@ -275,6 +275,11 @@ static zend_ast *vyrtue_ast_process_call_enter(zend_ast *ast, struct vyrtue_prep
 
     // ignore dynamic calls
     if (name_ast->kind != ZEND_AST_ZVAL || Z_TYPE_P(zend_ast_get_zval(name_ast)) != IS_STRING) {
+#ifdef VYRTUE_DEBUG
+        if (UNEXPECTED(NULL != getenv("PHP_VYRTUE_DEBUG_CALL"))) {
+            php_error_docref(NULL, E_WARNING, "vyrtue: Dynamic function call");
+        }
+#endif
         return NULL;
     }
 
@@ -282,7 +287,11 @@ static zend_ast *vyrtue_ast_process_call_enter(zend_ast *ast, struct vyrtue_prep
     zend_string *name_str = vyrtue_resolve_function_name(Z_STR_P(zend_ast_get_zval(name_ast)), name_ast->attr, &is_fully_qualified, ctx);
     if (!is_fully_qualified) {
         // ignore unqualified function calls
-        // php_error_docref(NULL, E_WARNING, "Unqualified function call: %.*s", (int) name_str->len, name_str->val);
+#ifdef VYRTUE_DEBUG
+        if (UNEXPECTED(NULL != getenv("PHP_VYRTUE_DEBUG_CALL"))) {
+            php_error_docref(NULL, E_WARNING, "vyrtue: Unqualified function call: %.*s", (int) name_str->len, name_str->val);
+        }
+#endif
         return NULL;
     }
 
@@ -299,6 +308,11 @@ static zend_ast *vyrtue_ast_process_call_leave(zend_ast *ast, struct vyrtue_prep
 
     // ignore dynamic calls
     if (name_ast->kind != ZEND_AST_ZVAL || Z_TYPE_P(zend_ast_get_zval(name_ast)) != IS_STRING) {
+#ifdef VYRTUE_DEBUG
+        if (UNEXPECTED(NULL != getenv("PHP_VYRTUE_DEBUG_CALL"))) {
+            php_error_docref(NULL, E_WARNING, "vyrtue: Dynamic function call");
+        }
+#endif
         return NULL;
     }
 
@@ -306,7 +320,11 @@ static zend_ast *vyrtue_ast_process_call_leave(zend_ast *ast, struct vyrtue_prep
     zend_string *name_str = vyrtue_resolve_function_name(Z_STR_P(zend_ast_get_zval(name_ast)), name_ast->attr, &is_fully_qualified, ctx);
     if (!is_fully_qualified) {
         // ignore unqualified function calls
-        // php_error_docref(NULL, E_WARNING, "Unqualified function call: %.*s", (int) name_str->len, name_str->val);
+#ifdef VYRTUE_DEBUG
+        if (UNEXPECTED(NULL != getenv("PHP_VYRTUE_DEBUG_CALL"))) {
+            php_error_docref(NULL, E_WARNING, "vyrtue: Unqualified function call: %.*s", (int) name_str->len, name_str->val);
+        }
+#endif
         return NULL;
     }
 

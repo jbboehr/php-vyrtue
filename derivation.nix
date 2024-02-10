@@ -20,7 +20,8 @@ buildPecl rec {
     []
     ++ lib.optional debugSupport "--enable-vyrtue-debug";
 
-  makeFlags = ["phpincludedir=$(out)/include/php"];
+  makeFlags = ["phpincludedir=$(dev)/include"];
+  outputs = ["out" "dev"];
 
   #TEST_PHP_DETAILED = 1;
   NO_INTERACTION = 1;
