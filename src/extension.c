@@ -101,8 +101,43 @@ static PHP_MINFO_FUNCTION(vyrtue)
     php_info_print_table_row(2, "Version", PHP_VYRTUE_VERSION);
     php_info_print_table_row(2, "Released", PHP_VYRTUE_RELEASE);
     php_info_print_table_row(2, "Authors", PHP_VYRTUE_AUTHORS);
+    php_info_print_table_end();
 
     DISPLAY_INI_ENTRIES();
+
+    php_info_print_table_start();
+
+    const struct vyrtue_visitor_array *visitors;
+    zend_ulong num_key;
+    zend_string *str_key;
+    char buffer[1000];
+
+    ZEND_HASH_FOREACH_NUM_KEY_PTR(&VYRTUE_G(kind_visitors), num_key, visitors)
+    {
+        for (size_t i = 0; i < visitors->length; i++) {
+            snprintf(buffer, sizeof(buffer) - 1, "%lu", num_key);
+            php_info_print_table_row(2, buffer, visitors->data[i].name);
+        }
+    }
+    ZEND_HASH_FOREACH_END();
+
+    ZEND_HASH_FOREACH_STR_KEY_PTR(&VYRTUE_G(function_visitors), str_key, visitors)
+    {
+        for (size_t i = 0; i < visitors->length; i++) {
+            php_info_print_table_row(2, ZSTR_VAL(str_key), visitors->data[i].name);
+        }
+    }
+    ZEND_HASH_FOREACH_END();
+
+    ZEND_HASH_FOREACH_STR_KEY_PTR(&VYRTUE_G(attribute_visitors), str_key, visitors)
+    {
+        for (size_t i = 0; i < visitors->length; i++) {
+            php_info_print_table_row(2, ZSTR_VAL(str_key), visitors->data[i].name);
+        }
+    }
+    ZEND_HASH_FOREACH_END();
+
+    php_info_print_table_end();
 }
 
 static PHP_GINIT_FUNCTION(vyrtue)
@@ -112,15 +147,15 @@ static PHP_GINIT_FUNCTION(vyrtue)
 #endif
     memset(vyrtue_globals, 0, sizeof(zend_vyrtue_globals));
     zend_hash_init(&vyrtue_globals->attribute_visitors, 16, NULL, NULL, 1);
-    zend_hash_init(&vyrtue_globals->function_hooks, 16, NULL, NULL, 1);
-    zend_hash_init(&vyrtue_globals->kind_hooks, 16, NULL, NULL, 1);
+    zend_hash_init(&vyrtue_globals->function_visitors, 16, NULL, NULL, 1);
+    zend_hash_init(&vyrtue_globals->kind_visitors, 16, NULL, NULL, 1);
 }
 
 static PHP_GSHUTDOWN_FUNCTION(vyrtue)
 {
     zend_hash_destroy(&vyrtue_globals->attribute_visitors);
-    zend_hash_destroy(&vyrtue_globals->function_hooks);
-    zend_hash_destroy(&vyrtue_globals->kind_hooks);
+    zend_hash_destroy(&vyrtue_globals->function_visitors);
+    zend_hash_destroy(&vyrtue_globals->kind_visitors);
 }
 
 const zend_function_entry vyrtue_functions[] = {

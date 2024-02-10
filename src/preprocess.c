@@ -501,11 +501,11 @@ void vyrtue_ast_process_file(zend_ast *ast)
 VYRTUE_LOCAL
 PHP_MINIT_FUNCTION(vyrtue_preprocess)
 {
-    vyrtue_register_kind_visitor(ZEND_AST_USE, vyrtue_ast_process_use_enter, NULL);
-    vyrtue_register_kind_visitor(ZEND_AST_GROUP_USE, vyrtue_ast_process_group_use_enter, vyrtue_ast_process_group_use_leave);
-    vyrtue_register_kind_visitor(ZEND_AST_NAMESPACE, vyrtue_ast_process_namespace_enter, vyrtue_ast_process_namespace_leave);
-    vyrtue_register_kind_visitor(ZEND_AST_CALL, vyrtue_ast_process_call_enter, vyrtue_ast_process_call_leave);
-    vyrtue_register_kind_visitor(ZEND_AST_CLASS, vyrtue_ast_process_class_enter, vyrtue_ast_process_class_leave);
+    vyrtue_register_kind_visitor("vyrtue internal", ZEND_AST_USE, vyrtue_ast_process_use_enter, NULL);
+    vyrtue_register_kind_visitor("vyrtue internal", ZEND_AST_GROUP_USE, vyrtue_ast_process_group_use_enter, vyrtue_ast_process_group_use_leave);
+    vyrtue_register_kind_visitor("vyrtue internal", ZEND_AST_NAMESPACE, vyrtue_ast_process_namespace_enter, vyrtue_ast_process_namespace_leave);
+    vyrtue_register_kind_visitor("vyrtue internal", ZEND_AST_CALL, vyrtue_ast_process_call_enter, vyrtue_ast_process_call_leave);
+    vyrtue_register_kind_visitor("vyrtue internal", ZEND_AST_CLASS, vyrtue_ast_process_class_enter, vyrtue_ast_process_class_leave);
 
     return SUCCESS;
 }

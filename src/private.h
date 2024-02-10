@@ -31,6 +31,7 @@ struct vyrtue_preprocess_context
 
 struct vyrtue_visitor
 {
+    const char *name;
     vyrtue_ast_callback enter;
     vyrtue_ast_callback leave;
 };
