@@ -43,6 +43,19 @@ static void str_dtor(zval *zv)
 }
 
 VYRTUE_LOCAL
+bool zend_get_unqualified_name(const zend_string *name, const char **result, size_t *result_len)
+{
+    const char *ns_separator = zend_memrchr(ZSTR_VAL(name), '\\', ZSTR_LEN(name));
+    if (ns_separator != NULL) {
+        *result = ns_separator + 1;
+        *result_len = ZSTR_VAL(name) + ZSTR_LEN(name) - *result;
+        return 1;
+    }
+
+    return 0;
+}
+
+VYRTUE_LOCAL
 VYRTUE_ATTR_NONNULL_ALL
 VYRTUE_ATTR_WARN_UNUSED_RESULT
 HashTable *vyrtue_get_import_ht(uint32_t type, struct vyrtue_context *ctx)
@@ -50,19 +63,19 @@ HashTable *vyrtue_get_import_ht(uint32_t type, struct vyrtue_context *ctx)
     switch (type) {
         case ZEND_SYMBOL_CLASS:
             if (!ctx->imports) {
-                ctx->imports = emalloc(sizeof(HashTable));
+                ctx->imports = zend_arena_calloc(&ctx->arena, 1, sizeof(HashTable));
                 zend_hash_init(ctx->imports, 8, NULL, str_dtor, 0);
             }
             return ctx->imports;
         case ZEND_SYMBOL_FUNCTION:
             if (!ctx->imports_function) {
-                ctx->imports_function = emalloc(sizeof(HashTable));
+                ctx->imports_function = zend_arena_calloc(&ctx->arena, 1, sizeof(HashTable));
                 zend_hash_init(ctx->imports_function, 8, NULL, str_dtor, 0);
             }
             return ctx->imports_function;
         case ZEND_SYMBOL_CONST:
             if (!ctx->imports_const) {
-                ctx->imports_const = emalloc(sizeof(HashTable));
+                ctx->imports_const = zend_arena_calloc(&ctx->arena, 1, sizeof(HashTable));
                 zend_hash_init(ctx->imports_const, 8, NULL, str_dtor, 0);
             }
             return ctx->imports_const;
@@ -77,19 +90,19 @@ void vyrtue_reset_import_tables(struct vyrtue_context *ctx)
 {
     if (ctx->imports) {
         zend_hash_destroy(ctx->imports);
-        efree(ctx->imports);
+        zend_arena_release(&ctx->arena, ctx->imports);
         ctx->imports = NULL;
     }
 
     if (ctx->imports_function) {
         zend_hash_destroy(ctx->imports_function);
-        efree(ctx->imports_function);
+        zend_arena_release(&ctx->arena, ctx->imports_function);
         ctx->imports_function = NULL;
     }
 
     if (ctx->imports_const) {
         zend_hash_destroy(ctx->imports_const);
-        efree(ctx->imports_const);
+        zend_arena_release(&ctx->arena, ctx->imports_const);
         ctx->imports_const = NULL;
     }
 }

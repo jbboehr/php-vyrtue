@@ -35,6 +35,7 @@ struct vyrtue_context_stack
 
 struct vyrtue_context
 {
+    zend_arena *arena;
     bool in_namespace;
     bool in_group_use;
     zend_string *current_namespace;

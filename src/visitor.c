@@ -30,7 +30,6 @@
 #include "main/php_streams.h"
 
 #include "php_vyrtue.h"
-#include "compile.h"
 #include "visitor.h"
 
 static const struct vyrtue_visitor_array EMPTY_VISITOR_ARRAY = {

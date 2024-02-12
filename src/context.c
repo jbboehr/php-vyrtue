@@ -32,6 +32,14 @@
 
 VYRTUE_PUBLIC
 VYRTUE_ATTR_NONNULL_ALL
+VYRTUE_ATTR_RETURNS_NONNULL
+zend_arena *vyrtue_context_get_arena(struct vyrtue_context *ctx)
+{
+    return ctx->arena;
+}
+
+VYRTUE_PUBLIC
+VYRTUE_ATTR_NONNULL_ALL
 zend_ast *vyrtue_context_node_stack_top(struct vyrtue_context *ctx)
 {
     return vyrtue_context_stack_top(&ctx->node_stack);

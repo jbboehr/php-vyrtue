@@ -1,7 +1,9 @@
 
-# vim: tabstop=4:softtabstop=4:shiftwidth=4:noexpandtab
+m4_include(m4/ax_require_defined.m4)
+m4_include(m4/ax_prepend_flag.m4)
+m4_include(m4/ax_compiler_vendor.m4)
+m4_include(m4/ax_cflags_warn_all.m4)
 
-# args
 PHP_ARG_ENABLE(vyrtue,     whether to enable vyrtue support,
 [AS_HELP_STRING([--enable-vyrtue], [Enable vyrtue support])])
 
@@ -12,29 +14,9 @@ AC_DEFUN([PHP_VYRTUE_ADD_SOURCES], [
   PHP_VYRTUE_SOURCES="$PHP_VYRTUE_SOURCES $1"
 ])
 
-# main
 if test "$PHP_VYRTUE" != "no"; then
-    AC_MSG_CHECKING([if compiling with gcc])
-    AC_COMPILE_IFELSE(
-    [AC_LANG_PROGRAM([], [[
-    #ifndef __GNUC__
-        not gcc
-    #endif
-    ]])],
-    [GCC=yes], [GCC=no])
-    AC_MSG_RESULT([$GCC])
-
-    AC_MSG_CHECKING([if compiling with clang])
-    AC_COMPILE_IFELSE(
-    [AC_LANG_PROGRAM([], [[
-    #ifndef __clang__
-        not clang
-    #endif
-    ]])],
-    [CLANG=yes], [CLANG=no])
-    AC_MSG_RESULT([$CLANG])
-
-    AC_PATH_PROG(PKG_CONFIG, pkg-config, no)
+    AX_CFLAGS_WARN_ALL([WARN_CFLAGS])
+    CFLAGS="$WARN_CFLAGS $CFLAGS"
 
     if test "$PHP_VYRTUE_DEBUG" == "yes"; then
         AC_DEFINE([VYRTUE_DEBUG], [1], [Enable vyrtue debug support])

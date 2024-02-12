@@ -24,17 +24,8 @@
 #include <stdbool.h>
 #include <Zend/zend_API.h>
 
-static bool zend_get_unqualified_name(const zend_string *name, const char **result, size_t *result_len)
-{
-    const char *ns_separator = zend_memrchr(ZSTR_VAL(name), '\\', ZSTR_LEN(name));
-    if (ns_separator != NULL) {
-        *result = ns_separator + 1;
-        *result_len = ZSTR_VAL(name) + ZSTR_LEN(name) - *result;
-        return 1;
-    }
-
-    return 0;
-}
+VYRTUE_LOCAL
+bool zend_get_unqualified_name(const zend_string *name, const char **result, size_t *result_len);
 
 static zend_string *zend_concat_names(char *name1, size_t name1_len, char *name2, size_t name2_len)
 {

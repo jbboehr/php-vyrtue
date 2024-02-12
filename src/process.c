@@ -24,11 +24,12 @@
 #include <string.h>
 #include <stdbool.h>
 
-#include "Zend/zend_API.h"
-#include "Zend/zend_exceptions.h"
-#include "main/php.h"
-#include "main/php_streams.h"
-#include "ext/standard/php_var.h"
+#include <Zend/zend_API.h>
+#include <Zend/zend_arena.h>
+#include <Zend/zend_exceptions.h>
+#include <main/php.h>
+#include <main/php_streams.h>
+#include <ext/standard/php_var.h>
 
 #include "php_vyrtue.h"
 #include "compile.h"
@@ -37,12 +38,14 @@
 
 static zend_ast *vyrtue_ast_walk(zend_ast *ast, struct vyrtue_context *ctx);
 
+#if 0
 static void dump_ht(HashTable *ht)
 {
     zval tmp = {0};
     ZVAL_ARR(&tmp, ht);
     php_var_dump(&tmp, 1);
 }
+#endif
 
 #ifdef VYRTUE_DEBUG
 static inline void vyrtue_ast_process_debug_dump_ast(zend_ast *ast)
@@ -390,7 +393,8 @@ VYRTUE_ATTR_NONNULL_ALL
 static zend_ast *vyrtue_ast_process_attributes(zend_ast *ast, zend_ast *parent_ast, vyrtue_ast_enter_leave_fn fn, struct vyrtue_context *ctx)
 {
     zend_ast_list *list = zend_ast_get_list(ast);
-    uint32_t g, i, j;
+    uint32_t g;
+    uint32_t i;
 
     ZEND_ASSERT(ast->kind == ZEND_AST_ATTRIBUTE_LIST);
 
@@ -459,9 +463,6 @@ static zend_ast *vyrtue_ast_walk(zend_ast *ast, struct vyrtue_context *ctx)
     zend_ast *replace;
     zend_ast_decl *decl;
 
-    // this may be removed by compiler due to VYRTUE_ATTR_NONNULL_ALL
-    ZEND_ASSERT(ast != NULL);
-
     const struct vyrtue_visitor_array *visitors = vyrtue_get_kind_visitors(ast->kind);
 
     replace = vyrtue_ast_enter_node(ast, visitors, ctx);
@@ -507,7 +508,9 @@ VYRTUE_PUBLIC
 VYRTUE_ATTR_NONNULL_ALL
 void vyrtue_ast_process_file(zend_ast *ast)
 {
-    struct vyrtue_context ctx = {0};
+    struct vyrtue_context ctx = {
+        .arena = zend_arena_create(8 * 1024),
+    };
 
     zend_ast *replace = vyrtue_ast_walk(ast, &ctx);
     if (replace != NULL) {
@@ -531,6 +534,8 @@ void vyrtue_ast_process_file(zend_ast *ast)
     if (UNEXPECTED(vyrtue_context_stack_count(&ctx.node_stack) > 0)) {
         zend_error(E_WARNING, "vyrtue: ast process ended with %lu items on the node stack", vyrtue_context_stack_count(&ctx.node_stack));
     }
+
+    zend_arena_destroy(ctx.arena);
 }
 
 VYRTUE_LOCAL

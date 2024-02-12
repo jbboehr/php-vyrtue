@@ -126,6 +126,7 @@
             inputsFrom = [package];
             buildInputs = with pkgs; [
               actionlint
+              autoconf-archive
               clang-tools
               lcov
               gdb
