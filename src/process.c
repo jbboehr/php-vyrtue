@@ -72,6 +72,21 @@ static void vyrtue_ast_process_debug_replacement(zend_ast *before, zend_ast *aft
 #define vyrtue_ast_process_debug_replacement(before, after)
 #endif
 
+VYRTUE_ATTR_NONNULL_ALL
+static inline bool vyrtue_process_is_scope_ast(zend_ast *ast)
+{
+    switch (ast->kind) {
+        case ZEND_AST_FUNC_DECL:
+        case ZEND_AST_CLOSURE:
+        case ZEND_AST_METHOD:
+        case ZEND_AST_ARROW_FUNC:
+        case ZEND_AST_CLASS:
+            return true;
+        default:
+            return false;
+    }
+}
+
 /**
  * @see zend_compile_namespace
  */
@@ -461,42 +476,46 @@ VYRTUE_ATTR_WARN_UNUSED_RESULT
 static zend_ast *vyrtue_ast_walk(zend_ast *ast, struct vyrtue_context *ctx)
 {
     zend_ast *replace;
-    zend_ast_decl *decl;
-
+    bool is_scope_ast = vyrtue_process_is_scope_ast(ast);
     const struct vyrtue_visitor_array *visitors = vyrtue_get_kind_visitors(ast->kind);
 
+    // Push stacks
+    vyrtue_context_stack_push(&ctx->node_stack, ast);
+    if (is_scope_ast) {
+        vyrtue_context_stack_push(&ctx->scope_stack, ast);
+    }
+
+    // Enter
     replace = vyrtue_ast_enter_node(ast, visitors, ctx);
     if (replace) {
-        return vyrtue_ast_walk(replace, ctx) ?: replace;
+        goto done;
     }
 
-    vyrtue_context_stack_push(&ctx->node_stack, ast);
-
-    switch (ast->kind) {
-        case ZEND_AST_FUNC_DECL:
-        case ZEND_AST_CLOSURE:
-        case ZEND_AST_METHOD:
-        case ZEND_AST_ARROW_FUNC:
-        case ZEND_AST_CLASS: {
-            vyrtue_context_stack_push(&ctx->scope_stack, ast);
-
-            decl = (zend_ast_decl *) ast;
-            if (EXPECTED(decl->child[2])) {
-                vyrtue_ast_walk_recurse(decl->child[2], ctx);
-            }
-
-            vyrtue_context_stack_pop(&ctx->scope_stack, ast);
-            break;
+    // Recurse
+    if (vyrtue_process_is_scope_ast(ast)) {
+        zend_ast_decl *decl = (zend_ast_decl *) ast;
+        if (EXPECTED(decl->child[2])) {
+            vyrtue_ast_walk_recurse(decl->child[2], ctx);
         }
-        default: {
-            vyrtue_ast_walk_recurse(ast, ctx);
-            break;
-        }
+    } else {
+        vyrtue_ast_walk_recurse(ast, ctx);
     }
 
+    // Leave
+    replace = vyrtue_ast_leave_node(ast, visitors, ctx);
+    if (replace) {
+        goto done;
+    }
+
+done:
+
+    // Pop stacks
+    if (is_scope_ast) {
+        vyrtue_context_stack_pop(&ctx->scope_stack, ast);
+    }
     vyrtue_context_stack_pop(&ctx->node_stack, ast);
 
-    replace = vyrtue_ast_leave_node(ast, visitors, ctx);
+    // Recurse on replacement
     if (replace) {
         return vyrtue_ast_walk(replace, ctx) ?: replace;
     }
