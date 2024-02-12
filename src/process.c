@@ -512,11 +512,14 @@ void vyrtue_ast_process_file(zend_ast *ast)
         .arena = zend_arena_create(8 * 1024),
     };
 
+    vyrtue_context_stack_push(&ctx.scope_stack, ast);
+
     zend_ast *replace = vyrtue_ast_walk(ast, &ctx);
     if (replace != NULL) {
-        zend_throw_exception(zend_ce_parse_error, "vyrtue visitor attempted to replace the root AST node which is unsupported", 0);
-        return;
+        zend_throw_exception(zend_ce_parse_error, "vyrtue: visitor attempted to replace the root AST node which is unsupported", 0);
     }
+
+    vyrtue_context_stack_pop(&ctx.scope_stack, ast);
 
 #ifdef VYRTUE_DEBUG
     if (UNEXPECTED(NULL != getenv("PHP_VYRTUE_DEBUG_DUMP_AST"))) {

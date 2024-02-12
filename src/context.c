@@ -40,14 +40,27 @@ zend_arena *vyrtue_context_get_arena(struct vyrtue_context *ctx)
 
 VYRTUE_PUBLIC
 VYRTUE_ATTR_NONNULL_ALL
-zend_ast *vyrtue_context_node_stack_top(struct vyrtue_context *ctx)
+zend_ast *vyrtue_context_scope_stack_top_ast(struct vyrtue_context *ctx)
 {
-    return vyrtue_context_stack_top(&ctx->node_stack);
+    struct vyrtue_context_stack_frame *frame = vyrtue_context_stack_top(&ctx->scope_stack);
+    if (UNEXPECTED(NULL == frame)) {
+        zend_error_noreturn(E_COMPILE_ERROR, "vyrtue: stack underflow");
+    }
+    ZEND_ASSERT(frame->ast != NULL);
+    return frame->ast;
 }
 
 VYRTUE_PUBLIC
 VYRTUE_ATTR_NONNULL_ALL
-zend_ast *vyrtue_context_scope_stack_top(struct vyrtue_context *ctx)
+HashTable *vyrtue_context_scope_stack_top_ht(struct vyrtue_context *ctx)
 {
-    return vyrtue_context_stack_top(&ctx->scope_stack);
+    struct vyrtue_context_stack_frame *frame = vyrtue_context_stack_top(&ctx->scope_stack);
+    if (UNEXPECTED(NULL == frame)) {
+        zend_error_noreturn(E_COMPILE_ERROR, "vyrtue: stack underflow");
+    }
+    if (frame->ht == NULL) {
+        frame->ht = zend_arena_calloc(&ctx->arena, 1, sizeof(HashTable));
+        zend_hash_init(frame->ht, 8, NULL, NULL, 0);
+    }
+    return frame->ht;
 }

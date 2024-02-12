@@ -25,12 +25,18 @@
 #include <Zend/zend_errors.h>
 #include "php_vyrtue.h"
 
-#define VYRTUE_STACK_SIZE 256
+#define VYRTUE_STACK_SIZE 128
+
+struct vyrtue_context_stack_frame
+{
+    zend_ast *ast;
+    HashTable *ht;
+};
 
 struct vyrtue_context_stack
 {
     size_t i;
-    zend_ast *data[VYRTUE_STACK_SIZE];
+    struct vyrtue_context_stack_frame data[VYRTUE_STACK_SIZE];
 };
 
 struct vyrtue_context
@@ -49,7 +55,11 @@ struct vyrtue_context
 VYRTUE_ATTR_NONNULL_ALL
 static inline void vyrtue_context_stack_push(struct vyrtue_context_stack *stack, zend_ast *ast)
 {
-    stack->data[stack->i] = ast;
+    if (UNEXPECTED(stack->i) >= VYRTUE_STACK_SIZE) {
+        zend_error_noreturn(E_COMPILE_ERROR, "vyrtue: stack overflow");
+    }
+
+    stack->data[stack->i].ast = ast;
     stack->i++;
 }
 
@@ -57,17 +67,20 @@ VYRTUE_ATTR_NONNULL_ALL
 static inline void vyrtue_context_stack_pop(struct vyrtue_context_stack *stack, zend_ast *ast)
 {
     if (UNEXPECTED(stack->i <= 0)) {
-        zend_error(E_WARNING, "vyrtue: stack underflow");
-        return;
+        zend_error_noreturn(E_COMPILE_ERROR, "vyrtue: stack underflow");
     }
 
     stack->i--;
 
-    if (UNEXPECTED(ast != stack->data[stack->i])) {
-        zend_error(E_WARNING, "vyrtue: stack pop mismatch");
+    if (UNEXPECTED(ast != stack->data[stack->i].ast)) {
+        zend_error_noreturn(E_COMPILE_ERROR, "vyrtue: stack pop mismatch");
     }
 
-    stack->data[stack->i] = NULL;
+    stack->data[stack->i].ast = NULL;
+
+    if (stack->data[stack->i].ht) {
+        zend_hash_destroy(stack->data[stack->i].ht);
+    }
 }
 
 VYRTUE_ATTR_NONNULL_ALL
@@ -77,14 +90,14 @@ static inline size_t vyrtue_context_stack_count(struct vyrtue_context_stack *sta
 }
 
 VYRTUE_ATTR_NONNULL_ALL
-static inline zend_ast *vyrtue_context_stack_top(struct vyrtue_context_stack *stack)
+VYRTUE_ATTR_RETURNS_NONNULL
+static inline struct vyrtue_context_stack_frame *vyrtue_context_stack_top(struct vyrtue_context_stack *stack)
 {
     if (UNEXPECTED(stack->i <= 0)) {
-        zend_error(E_WARNING, "vyrtue: stack underflow");
-        return NULL;
+        zend_error_noreturn(E_COMPILE_ERROR, "vyrtue: stack underflow");
     }
 
-    return stack->data[stack->i - 1];
+    return &stack->data[stack->i - 1];
 }
 
 #endif

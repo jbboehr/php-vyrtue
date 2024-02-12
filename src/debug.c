@@ -29,9 +29,22 @@
 
 #include "php_vyrtue.h"
 
+static inline void run_common_asserts(struct vyrtue_context *ctx)
+{
+    if (NULL == vyrtue_context_scope_stack_top_ht(ctx)) {
+        zend_error_noreturn(E_COMPILE_ERROR, "vyrtue: debug failed to fetch stack ht");
+    }
+
+    if (NULL == vyrtue_context_scope_stack_top_ast(ctx)) {
+        zend_error_noreturn(E_COMPILE_ERROR, "vyrtue: debug failed to fetch scope stack ast");
+    }
+}
+
 static zend_ast *vyrtue_debug_sample_replacement_enter(zend_ast *ast, struct vyrtue_context *ctx)
 {
     fprintf(stderr, "entering sample function\n");
+
+    run_common_asserts(ctx);
 
     return zend_ast_create_zval_from_long(12345);
 }
@@ -40,12 +53,16 @@ static zend_ast *vyrtue_debug_sample_replacement_leave(zend_ast *ast, struct vyr
 {
     fprintf(stderr, "leaving sample function\n");
 
+    run_common_asserts(ctx);
+
     return NULL;
 }
 
 static zend_ast *vyrtue_debug_sample_function_enter(zend_ast *ast, struct vyrtue_context *ctx)
 {
     fprintf(stderr, "entering sample function\n");
+
+    run_common_asserts(ctx);
 
     return NULL;
 }
@@ -54,6 +71,8 @@ static zend_ast *vyrtue_debug_sample_function_leave(zend_ast *ast, struct vyrtue
 {
     fprintf(stderr, "leaving sample function\n");
 
+    run_common_asserts(ctx);
+
     return NULL;
 }
 
@@ -61,12 +80,16 @@ static zend_ast *vyrtue_debug_sample_attribute_enter(zend_ast *ast, struct vyrtu
 {
     fprintf(stderr, "entering sample attribute\n");
 
+    run_common_asserts(ctx);
+
     return NULL;
 }
 
 static zend_ast *vyrtue_debug_sample_attribute_leave(zend_ast *ast, struct vyrtue_context *ctx)
 {
     fprintf(stderr, "leaving sample attribute\n");
+
+    run_common_asserts(ctx);
 
     return NULL;
 }

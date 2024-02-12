@@ -90,7 +90,11 @@ zend_ast *vyrtue_context_node_stack_top(struct vyrtue_context *ctx);
 
 VYRTUE_PUBLIC
 VYRTUE_ATTR_NONNULL_ALL
-zend_ast *vyrtue_context_scope_stack_top(struct vyrtue_context *ctx);
+zend_ast *vyrtue_context_scope_stack_top_ast(struct vyrtue_context *ctx);
+
+VYRTUE_PUBLIC
+VYRTUE_ATTR_NONNULL_ALL
+HashTable *vyrtue_context_scope_stack_top_ht(struct vyrtue_context *ctx);
 
 VYRTUE_PUBLIC
 VYRTUE_ATTR_NONNULL_ALL
