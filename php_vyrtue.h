@@ -99,7 +99,7 @@ HashTable *vyrtue_context_scope_stack_top_ht(struct vyrtue_context *ctx);
 VYRTUE_PUBLIC
 VYRTUE_ATTR_NONNULL_ALL
 VYRTUE_ATTR_RETURNS_NONNULL
-zend_arena *vyrtue_context_get_arena(struct vyrtue_context *ctx);
+zend_arena **vyrtue_context_get_arena_ptr(struct vyrtue_context *ctx);
 
 VYRTUE_PUBLIC
 zend_never_inline void vyrtue_ast_process(zend_ast *ast);
