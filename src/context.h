@@ -59,7 +59,10 @@ static inline void vyrtue_context_stack_push(struct vyrtue_context_stack *stack,
         zend_error_noreturn(E_COMPILE_ERROR, "vyrtue: stack overflow");
     }
 
-    stack->data[stack->i].ast = ast;
+    stack->data[stack->i] = (struct vyrtue_context_stack_frame){
+        .ast = ast,
+        .ht = NULL,
+    };
     stack->i++;
 }
 
@@ -76,11 +79,14 @@ static inline void vyrtue_context_stack_pop(struct vyrtue_context_stack *stack, 
         zend_error_noreturn(E_COMPILE_ERROR, "vyrtue: stack pop mismatch");
     }
 
-    stack->data[stack->i].ast = NULL;
-
     if (stack->data[stack->i].ht) {
         zend_hash_destroy(stack->data[stack->i].ht);
     }
+
+    stack->data[stack->i] = (struct vyrtue_context_stack_frame){
+        .ast = NULL,
+        .ht = NULL,
+    };
 }
 
 VYRTUE_ATTR_NONNULL_ALL
