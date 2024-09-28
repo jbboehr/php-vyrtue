@@ -1,7 +1,5 @@
 /**
- * Copyright (C) 2024 John Boehr & contributors
- *
- * This file is part of php-vyrtue.
+ * Copyright (c) anno Domini nostri Jesu Christi MMXVI-MMXXIV John Boehr & contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -96,6 +94,9 @@ static PHP_MSHUTDOWN_FUNCTION(vyrtue)
     return SUCCESS;
 }
 
+const char *PHP_VYRTUE_MOTD =
+    "Think not that I am come to send peace on earth: I came not to send peace, but a sword. Matthew 10:34";
+
 static PHP_MINFO_FUNCTION(vyrtue)
 {
     php_info_print_table_start();
@@ -139,6 +140,10 @@ static PHP_MINFO_FUNCTION(vyrtue)
     ZEND_HASH_FOREACH_END();
 
     php_info_print_table_end();
+
+    php_info_print_box_start(0);
+    PUTS(PHP_VYRTUE_MOTD);
+    php_info_print_box_end();
 }
 
 static PHP_GINIT_FUNCTION(vyrtue)

@@ -23,6 +23,7 @@ jobs:
                     - "8.1"
                     - "8.2"
                     - "8.3"
+                    - "8.4"
         steps:
             -   uses: actions/checkout@v4
 
@@ -54,6 +55,7 @@ jobs:
                     - "8.1"
                     - "8.2"
                     - "8.3"
+                    - "8.4"
         steps:
             -   uses: actions/checkout@v4
 
@@ -124,9 +126,9 @@ jobs:
                     key: nix-store.nar-${{ runner.os }}-${{ hashFiles('flake.nix', 'flake.lock') }}
                     restore-keys: nix-store.nar-${{ runner.os }}-
 
-            -   uses: cachix/install-nix-action@v25
+            -   uses: cachix/install-nix-action@v27
                 with:
-                    nix_path: nixpkgs=channel:nixos-23.11
+                    nix_path: nixpkgs=channel:nixos-24.05
 
             -   name: Import Nix Store Cache
                 if: "steps.nix-cache.outputs.cache-hit == 'true'"
